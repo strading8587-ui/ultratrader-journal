@@ -136,12 +136,12 @@
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 8px; }
         
-        input[type="date"], input[type="number"] { 
+        input[type="date"], input[type="number"], input[type="month"] { 
             width: 100%; background: var(--bg-input); border: 1px solid var(--border-subtle); 
             border-radius: var(--radius-md); padding: 14px 16px; color: var(--text-primary); 
             font-family: var(--font-sans); font-size: 15px; font-weight: 500; transition: all 0.2s;
         }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
+        input[type="date"]::-webkit-calendar-picker-indicator, input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
         input:focus { border-color: var(--brand-solid); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
 
         .pill-group { display: flex; flex-wrap: wrap; gap: 8px; background: var(--bg-app); padding: 6px; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); }
@@ -173,6 +173,14 @@
         .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
         .btn-danger { border-color: rgba(244, 63, 94, 0.3); color: var(--loss); }
         .btn-danger:hover { background: var(--loss-glow); color: var(--loss); border-color: var(--loss); }
+
+        /* Toggle Switch Styles */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-input); transition: .3s; border-radius: 22px; border: 1px solid var(--border-subtle); }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: var(--text-secondary); transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--brand-solid); border-color: var(--brand-solid); }
+        input:checked + .slider:before { transform: translateX(18px); background-color: #fff; }
 
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .cal-title { font-size: 16px; font-weight: 600; }
@@ -233,7 +241,7 @@
     <div class="metrics-row">
         <div class="metric-widget">
             <div class="metric-info">
-                <div class="metric-label">Net Profit / Loss</div>
+                <div class="metric-label" id="pnlLabel">Gross Profit / Loss</div>
                 <div class="metric-value" id="statTotalPnl">₹0</div>
             </div>
         </div>
@@ -340,6 +348,27 @@
             </div>
 
             <div class="ut-card">
+                <div class="ut-card-title" style="margin-bottom: 16px;">
+                    <div>Other Charges & Fees</div>
+                    <label class="switch">
+                        <input type="checkbox" id="chargesToggle" onchange="toggleCharges()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="display:flex; gap:12px; align-items:flex-end;">
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <span class="form-label">Month</span>
+                        <input type="month" id="chargeMonth">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <span class="form-label">Amount (₹)</span>
+                        <input type="number" id="chargeInputAmount" placeholder="0.00" step="0.01">
+                    </div>
+                    <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--border-focus); color: var(--text-primary);" onclick="saveChargeEntry()">Save</button>
+                </div>
+            </div>
+
+            <div class="ut-card">
                 <div class="ut-card-title">Performance Telemetry</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTrade">₹0</div></div>
@@ -375,8 +404,11 @@
 </div>
 
 <script>
+    // These variables now act ONLY as a read-only mirror of your Google Sheet.
+    // They are completely overwritten on every database fetch.
     let trades = [];
     let notesData = {};
+    let isChargesOn = false;
     
     // YOUR GOOGLE SHEETS API
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
@@ -423,7 +455,6 @@
     }
 
     // --- DATE NORMALIZER FIX ---
-    // Google Sheets converts your string dates into timestamps. This forces them back into pure YYYY-MM-DD strings.
     function normalizeDateStr(dateVal) {
         if (!dateVal) return "";
         if (typeof dateVal === 'string' && dateVal.length === 10 && dateVal.includes('-')) return dateVal;
@@ -441,7 +472,6 @@
         try {
             const data = await apiGet();
             
-            // Normalize dates on fetch so the calendar matching logic works perfectly
             trades = (data.trades || []).map(t => {
                 return { ...t, date: normalizeDateStr(t.date) };
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -449,7 +479,11 @@
             notesData = {};
             if (data.notes) {
                 for (let key in data.notes) {
-                    notesData[normalizeDateStr(key)] = data.notes[key];
+                    if(key.startsWith('CHARGE_')) {
+                        notesData[key] = data.notes[key];
+                    } else {
+                        notesData[normalizeDateStr(key)] = data.notes[key];
+                    }
                 }
             }
             
@@ -490,6 +524,22 @@
         
         await apiPost('saveNotes', { notes: updatedNotes });
         closeModal();
+        await syncWithSheet();
+    }
+
+    async function saveChargeEntry() {
+        const ym = document.getElementById('chargeMonth').value;
+        const amt = document.getElementById('chargeInputAmount').value;
+        if(!ym) return;
+        
+        const updatedNotes = { ...notesData };
+        if(amt === "" || isNaN(amt)) {
+            delete updatedNotes['CHARGE_' + ym];
+        } else {
+            updatedNotes['CHARGE_' + ym] = parseFloat(amt);
+        }
+        
+        await apiPost('saveNotes', { notes: updatedNotes });
         await syncWithSheet();
     }
 
@@ -545,7 +595,28 @@
         el.classList.add('active');
     }
 
+    function toggleCharges() { 
+        isChargesOn = document.getElementById('chargesToggle').checked; 
+        updateUI(); 
+    }
+
+    // Updates the charge input based on the calendar's current month
+    function updateChargeUI() {
+        document.getElementById('chargesToggle').checked = isChargesOn;
+        const y = curDate.getFullYear();
+        const m = String(curDate.getMonth() + 1).padStart(2, '0');
+        const ym = `${y}-${m}`;
+        document.getElementById('chargeMonth').value = ym;
+        document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + ym] || '';
+    }
+
+    // Listener so if user manually changes month input, it updates the amount without syncing calendar
+    document.getElementById('chargeMonth').addEventListener('change', (e) => {
+        document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + e.target.value] || '';
+    });
+
     function updateUI() { 
+        updateChargeUI();
         renderTelemetry(); 
         renderGauges(); 
         renderCalendar(); 
@@ -572,8 +643,23 @@
         }
         
         document.getElementById('statTradeCount').innerText = trades.length;
-        const totalPnl = trades.reduce((a,b) => a + b.pnl, 0);
-        const avgTrade = totalPnl / trades.length;
+        
+        const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
+        let totalCharges = 0;
+        if(isChargesOn) {
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0;
+            }
+        }
+        const displayPnl = grossPnl - totalCharges;
+
+        const pnlEl = document.getElementById('statTotalPnl');
+        pnlEl.innerText = `₹${displayPnl.toLocaleString()}`;
+        pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
+        document.getElementById('pnlLabel').innerText = isChargesOn ? "Net Profit / Loss" : "Gross Profit / Loss";
+        
+        // Averages remain tied to trade execution metrics
+        const avgTrade = grossPnl / trades.length;
         const wins = trades.filter(t => t.pnl > 0);
         const losses = trades.filter(t => t.pnl <= 0);
         const avgWin = wins.length ? wins.reduce((a,b)=>a+b.pnl,0)/wins.length : 0;
@@ -581,9 +667,26 @@
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
 
+        // Drawdown uses a combined timeline to account for charges
         let cumulative = 0; let peak = -Infinity; let maxDD = 0;
         let ddPeakDate = null; let maxDD_StartDate = null; let maxDD_EndDate = null;
-        [...trades].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
+        
+        const timeline = [];
+        trades.forEach(t => timeline.push({ date: t.date, pnl: t.pnl }));
+        
+        if(isChargesOn) {
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) {
+                    const m = k.replace('CHARGE_', '');
+                    let lastDate = m + '-28'; // Fallback
+                    const datesInMonth = trades.filter(t => t.date.startsWith(m)).map(t => t.date).sort();
+                    if(datesInMonth.length > 0) lastDate = datesInMonth[datesInMonth.length - 1];
+                    timeline.push({ date: lastDate, pnl: -parseFloat(notesData[k]) });
+                }
+            }
+        }
+
+        timeline.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
             cumulative += t.pnl;
             const tDate = new Date(t.date);
             if(cumulative > peak) { peak = cumulative; ddPeakDate = tDate; } 
@@ -594,10 +697,6 @@
         let durationDays = 0;
         if(maxDD_StartDate && maxDD_EndDate) durationDays = Math.ceil(Math.abs(maxDD_EndDate - maxDD_StartDate) / (1000 * 60 * 60 * 24));
 
-        const pnlEl = document.getElementById('statTotalPnl');
-        pnlEl.innerText = `₹${totalPnl.toLocaleString()}`;
-        pnlEl.className = `metric-value ${totalPnl >= 0 ? 'text-profit' : 'text-loss'}`;
-        
         document.getElementById('statAvgTrade').innerText = `₹${avgTrade.toFixed(0)}`;
         document.getElementById('statAvgWin').innerText = `₹${avgWin.toFixed(0)}`;
         document.getElementById('statAvgLoss').innerText = `₹${avgLoss.toFixed(0)}`;
@@ -642,7 +741,21 @@
     }
 
     function renderCharts() {
-        const dateMap = {}; trades.forEach(t => dateMap[t.date] = (dateMap[t.date] || 0) + t.pnl);
+        const dateMap = {}; 
+        trades.forEach(t => dateMap[t.date] = (dateMap[t.date] || 0) + t.pnl);
+        
+        if (isChargesOn) {
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) {
+                    const m = k.replace('CHARGE_', '');
+                    let lastDate = m + '-28';
+                    const datesInMonth = Object.keys(dateMap).filter(d => d.startsWith(m)).sort();
+                    if(datesInMonth.length > 0) lastDate = datesInMonth[datesInMonth.length - 1];
+                    dateMap[lastDate] = (dateMap[lastDate] || 0) - parseFloat(notesData[k]);
+                }
+            }
+        }
+
         const dates = Object.keys(dateMap).sort();
         let eq = [], cum = 0;
         dates.forEach(d => { cum += dateMap[d]; eq.push(cum); });
@@ -705,7 +818,6 @@
             if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
         }
 
-        // Added spacing to the < operator so GitHub Pages does not break the script
         for(let i = 0; i < fDay; i++) {
             grid.innerHTML += '<div></div>';
         }
@@ -765,17 +877,33 @@
         const e = document.getElementById('repEnd').value; 
         if(!s || !e) return;
         const sub = trades.filter(t => t.date >= s && t.date <= e); 
-        const tot = sub.reduce((a,b)=>a+b.pnl,0);
+        let tot = sub.reduce((a,b)=>a+b.pnl,0);
         let bd = {}; 
         sub.forEach(t => bd[t.category] = (bd[t.category]||0) + t.pnl);
         
+        if(isChargesOn) {
+            const startM = s.substring(0, 7);
+            const endM = e.substring(0, 7);
+            let reportCharges = 0;
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) {
+                    const m = k.replace('CHARGE_', '');
+                    if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]);
+                }
+            }
+            if(reportCharges > 0) {
+                tot -= reportCharges;
+                bd['Other Charges & Fees'] = -reportCharges; 
+            }
+        }
+
         const totEl = document.getElementById('repTotal');
         totEl.innerText = `₹${tot.toLocaleString()}`; 
         totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
         let h = ''; 
         for(let k in bd) {
-             h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">₹${bd[k].toLocaleString()}</span></div>`;
+             h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
         }
         document.getElementById('repBreakdown').innerHTML = h; 
         document.getElementById('reportBox').style.display = 'block';
