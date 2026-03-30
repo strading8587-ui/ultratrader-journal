@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
     <title>UltraTrader Style Journal</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -377,7 +378,7 @@
     let trades = [];
     let notesData = {};
     
-    // YOUR GOOGLE SHEETS API (already updated)
+    // YOUR GOOGLE SHEETS API
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
 
     let selectedCat = 'My Algo'; 
@@ -400,27 +401,26 @@
     Chart.defaults.plugins.tooltip.displayColors = false;
 
     async function apiGet() {
-    const res = await fetch(`${API_URL}?action=getData`, {
-        method: 'GET',
-        redirect: 'follow' // Crucial: Tells the browser to follow Google's redirect
-    });
-    
-    if (!res.ok) throw new Error("Network response was not ok");
-    return await res.json();
-}
+        const res = await fetch(`${API_URL}?action=getData`, {
+            method: 'GET',
+            redirect: 'follow'
+        });
+        
+        if (!res.ok) throw new Error("Network response was not ok");
+        return await res.json();
+    }
 
-async function apiPost(action, payload = {}) {
-    const res = await fetch(API_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        // Crucial: Sending as text/plain bypasses the browser's CORS preflight block
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-        body: JSON.stringify({ action, ...payload })
-    });
-    
-    if (!res.ok) throw new Error("Network response was not ok");
-    return await res.json();
-}
+    async function apiPost(action, payload = {}) {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            body: JSON.stringify({ action, ...payload })
+        });
+        
+        if (!res.ok) throw new Error("Network response was not ok");
+        return await res.json();
+    }
 
     async function loadData() {
         try {
@@ -517,12 +517,16 @@ async function apiPost(action, payload = {}) {
 
     function renderTelemetry() {
         if(trades.length === 0) {
-            ['statTotalPnl','statAvgTrade','statAvgWin','statAvgLoss','statMaxWin','statMaxLoss','statMaxDD'].forEach(id => {
-                let el = document.getElementById(id);
-                el.innerText = "₹0";
-                el.className = "val";
-            });
+            document.getElementById('statTotalPnl').innerText = "₹0";
             document.getElementById('statTotalPnl').className = "metric-value";
+            
+            document.getElementById('statAvgTrade').innerText = "₹0";
+            document.getElementById('statAvgWin').innerText = "₹0";
+            document.getElementById('statAvgLoss').innerText = "₹0";
+            document.getElementById('statMaxWin').innerText = "₹0";
+            document.getElementById('statMaxLoss').innerText = "₹0";
+            document.getElementById('statMaxDD').innerText = "₹0";
+            
             document.getElementById('statDDDuration').innerText = "0d";
             document.getElementById('statTradeCount').innerText = "0";
             return;
