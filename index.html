@@ -400,17 +400,27 @@
     Chart.defaults.plugins.tooltip.displayColors = false;
 
     async function apiGet() {
-        const res = await fetch(`${API_URL}?action=getData`);
-        return await res.json();
-    }
-    async function apiPost(action, payload = {}) {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, ...payload })
-        });
-        return await res.json();
-    }
+    const res = await fetch(`${API_URL}?action=getData`, {
+        method: 'GET',
+        redirect: 'follow' // Crucial: Tells the browser to follow Google's redirect
+    });
+    
+    if (!res.ok) throw new Error("Network response was not ok");
+    return await res.json();
+}
+
+async function apiPost(action, payload = {}) {
+    const res = await fetch(API_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        // Crucial: Sending as text/plain bypasses the browser's CORS preflight block
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify({ action, ...payload })
+    });
+    
+    if (!res.ok) throw new Error("Network response was not ok");
+    return await res.json();
+}
 
     async function loadData() {
         try {
