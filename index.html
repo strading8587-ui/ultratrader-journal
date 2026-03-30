@@ -375,8 +375,6 @@
 </div>
 
 <script>
-    // These variables now act ONLY as a read-only mirror of your Google Sheet.
-    // They are completely overwritten on every database fetch.
     let trades = [];
     let notesData = {};
     
@@ -385,7 +383,7 @@
 
     let selectedCat = 'My Algo'; 
     let selectedSub = 'Nifty';
-    let curDate = new Date(new Date().getFullYear(), 3, 1);
+    let curDate = new Date();
     let chart1, gaugeWin, gaugePf;
     const tooltip = document.getElementById('iosTooltip');
 
@@ -424,13 +422,37 @@
         return await res.json();
     }
 
+    // --- DATE NORMALIZER FIX ---
+    // Google Sheets converts your string dates into timestamps. This forces them back into pure YYYY-MM-DD strings.
+    function normalizeDateStr(dateVal) {
+        if (!dateVal) return "";
+        if (typeof dateVal === 'string' && dateVal.length === 10 && dateVal.includes('-')) return dateVal;
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return dateVal;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
     // --- STATELESS DATA SYNC ---
     
     async function syncWithSheet() {
         try {
             const data = await apiGet();
-            trades = (data.trades || []).sort((a,b) => new Date(a.date) - new Date(b.date));
-            notesData = data.notes || {};
+            
+            // Normalize dates on fetch so the calendar matching logic works perfectly
+            trades = (data.trades || []).map(t => {
+                return { ...t, date: normalizeDateStr(t.date) };
+            }).sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            notesData = {};
+            if (data.notes) {
+                for (let key in data.notes) {
+                    notesData[normalizeDateStr(key)] = data.notes[key];
+                }
+            }
+            
             updateUI();
         } catch(e) {
             console.error(e);
@@ -447,7 +469,7 @@
         const pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
 
-        const newTrade = { id: Date.now(), date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Tez Algo')?selectedSub:'-', pnl };
+        const newTrade = { id: Date.now(), date: date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Tez Algo')?selectedSub:'-', pnl };
 
         await apiPost('addTrade', { trade: newTrade });
         document.getElementById('pnlInput').value = '';
@@ -488,7 +510,9 @@
             if(Array.isArray(d)) importedTrades = d;
             else { importedTrades = d.trades || []; importedNotes = d.notes || {}; }
             
+            importedTrades = importedTrades.map(t => ({...t, date: normalizeDateStr(t.date)}));
             importedTrades.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
             await apiPost('import', { trades: importedTrades, notes: importedNotes });
             await syncWithSheet();
         };
@@ -681,6 +705,7 @@
             if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
         }
 
+        // Added spacing to the < operator so GitHub Pages does not break the script
         for(let i = 0; i < fDay; i++) {
             grid.innerHTML += '<div></div>';
         }
