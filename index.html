@@ -658,7 +658,7 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = isChargesOn ? "Net Profit / Loss" : "Gross Profit / Loss";
         
-        // Averages remain tied to trade execution metrics
+        // Averages remain tied to trade execution metrics (Gross)
         const avgTrade = grossPnl / trades.length;
         const wins = trades.filter(t => t.pnl > 0);
         const losses = trades.filter(t => t.pnl <= 0);
@@ -667,26 +667,11 @@
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
 
-        // Drawdown uses a combined timeline to account for charges
+        // Drawdown uses pure trades (Charges are excluded to prevent fake monthly drawdowns)
         let cumulative = 0; let peak = -Infinity; let maxDD = 0;
         let ddPeakDate = null; let maxDD_StartDate = null; let maxDD_EndDate = null;
-        
-        const timeline = [];
-        trades.forEach(t => timeline.push({ date: t.date, pnl: t.pnl }));
-        
-        if(isChargesOn) {
-            for(let k in notesData) {
-                if(k.startsWith('CHARGE_')) {
-                    const m = k.replace('CHARGE_', '');
-                    let lastDate = m + '-28'; // Fallback
-                    const datesInMonth = trades.filter(t => t.date.startsWith(m)).map(t => t.date).sort();
-                    if(datesInMonth.length > 0) lastDate = datesInMonth[datesInMonth.length - 1];
-                    timeline.push({ date: lastDate, pnl: -parseFloat(notesData[k]) });
-                }
-            }
-        }
 
-        timeline.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
+        [...trades].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
             cumulative += t.pnl;
             const tDate = new Date(t.date);
             if(cumulative > peak) { peak = cumulative; ddPeakDate = tDate; } 
@@ -741,20 +726,9 @@
     }
 
     function renderCharts() {
+        // Equity Chart purely shows the execution timeline (Gross) to avoid artificial monthly cliff-drops
         const dateMap = {}; 
         trades.forEach(t => dateMap[t.date] = (dateMap[t.date] || 0) + t.pnl);
-        
-        if (isChargesOn) {
-            for(let k in notesData) {
-                if(k.startsWith('CHARGE_')) {
-                    const m = k.replace('CHARGE_', '');
-                    let lastDate = m + '-28';
-                    const datesInMonth = Object.keys(dateMap).filter(d => d.startsWith(m)).sort();
-                    if(datesInMonth.length > 0) lastDate = datesInMonth[datesInMonth.length - 1];
-                    dateMap[lastDate] = (dateMap[lastDate] || 0) - parseFloat(notesData[k]);
-                }
-            }
-        }
 
         const dates = Object.keys(dateMap).sort();
         let eq = [], cum = 0;
