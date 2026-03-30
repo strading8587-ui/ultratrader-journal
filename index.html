@@ -1,380 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-    <title>UltraTrader Style Journal</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* --- ULTRATRADER INSPIRED THEME --- */
-        :root {
-            --bg-base: #000000;
-            --bg-app: #09090b;
-            --bg-card: #141415;
-            --bg-input: #1f1f22;
-            --bg-hover: #27272a;
-            
-            --border-subtle: #27272a;
-            --border-focus: #6366f1;
-            
-            --brand-gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-            --brand-solid: #8b5cf6;
-            
-            --profit: #10b981;
-            --profit-glow: rgba(16, 185, 129, 0.2);
-            --loss: #f43f5e;
-            --loss-glow: rgba(244, 63, 94, 0.2);
-            
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --radius-pill: 999px;
-            
-            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-base);
-            background-image: radial-gradient(circle at 50% 0%, #1a1a24 0%, var(--bg-base) 70%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.5;
-        }
-
-        .app-header {
-            max-width: 1400px;
-            margin: 0 auto 30px auto;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .app-logo {
-            width: 32px; height: 32px;
-            background: var(--brand-gradient);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 18px; color: #fff;
-            box-shadow: var(--shadow-glow);
-        }
-        .app-title {
-            font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
-        }
-
-        .container { max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
-
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 24px; 
-        }
-        @media (min-width: 1024px) { 
-            .dashboard-grid { grid-template-columns: 380px 1fr; align-items: start; } 
-        }
-
-        .ut-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: var(--shadow-card);
-            position: relative;
-            overflow: hidden;
-        }
-        .ut-card-title {
-            font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .metrics-row { 
-            display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; 
-        }
-        @media (min-width: 768px) { .metrics-row { grid-template-columns: repeat(3, 1fr); } }
-
-        .metric-widget {
-            background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
-            padding: 20px; display: flex; align-items: center; gap: 20px;
-            box-shadow: var(--shadow-card);
-        }
-        .metric-info { flex: 1; }
-        .metric-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-        .metric-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
-        
-        .gauge-mini-wrap { width: 70px; height: 70px; position: relative; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
-        
-        .stat-item { 
-            background: var(--bg-app); border-radius: var(--radius-md); padding: 16px;
-            border: 1px solid transparent; transition: 0.2s;
-        }
-        .stat-item:hover { border-color: var(--border-subtle); background: var(--bg-hover); }
-        .stat-item .lbl { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-        .stat-item .val { font-size: 18px; font-weight: 600; }
-
-        .text-profit { color: var(--profit) !important; }
-        .text-loss { color: var(--loss) !important; }
-
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 8px; }
-        
-        input[type="date"], input[type="number"] { 
-            width: 100%; background: var(--bg-input); border: 1px solid var(--border-subtle); 
-            border-radius: var(--radius-md); padding: 14px 16px; color: var(--text-primary); 
-            font-family: var(--font-sans); font-size: 15px; font-weight: 500; transition: all 0.2s;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
-        input:focus { border-color: var(--brand-solid); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
-
-        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; background: var(--bg-app); padding: 6px; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); }
-        .pill {
-            flex: 1; min-width: 80px; text-align: center; padding: 10px 14px; background: transparent; border: none; color: var(--text-secondary);
-            font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; border-radius: var(--radius-md);
-            font-family: var(--font-sans);
-        }
-        .pill:hover { color: var(--text-primary); }
-        .pill.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid var(--border-subtle); }
-
-        #subCategorySection { overflow: hidden; max-height: 0; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        #subCategorySection.visible { max-height: 120px; opacity: 1; margin-top: 15px; }
-
-        .btn-gradient {
-            width: 100%; padding: 16px; background: var(--brand-gradient);
-            border: none; border-radius: var(--radius-md); color: #fff; font-family: var(--font-sans); 
-            font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-            box-shadow: var(--shadow-glow); margin-top: 10px;
-        }
-        .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-gradient:active { transform: translateY(1px); }
-
-        .btn-ghost { 
-            background: transparent; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); 
-            padding: 8px 14px; color: var(--text-secondary); font-size: 12px; font-weight: 500; 
-            cursor: pointer; transition: 0.2s; font-family: var(--font-sans); 
-        }
-        .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
-        .btn-danger { border-color: rgba(244, 63, 94, 0.3); color: var(--loss); }
-        .btn-danger:hover { background: var(--loss-glow); color: var(--loss); border-color: var(--loss); }
-
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .cal-title { font-size: 16px; font-weight: 600; }
-        .cal-nav-group { display: flex; gap: 8px; background: var(--bg-app); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 4px; }
-        .cal-btn { background: transparent; border: none; color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .cal-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-        
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day-name { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; }
-        
-        .cal-cell {
-            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; position: relative;
-            background: var(--bg-app); color: var(--text-secondary); border-radius: var(--radius-md);
-            border: 1px solid transparent;
-        }
-        .cal-cell:hover { border-color: var(--border-subtle); background: var(--bg-hover); color: var(--text-primary); }
-        .cal-cell.weekend { opacity: 0.3; }
-        .cal-cell.has-data { color: var(--text-primary); font-weight: 600; background: var(--bg-card); border-color: var(--border-subtle); }
-        
-        .indicator-dot { position: absolute; top: 6px; right: 6px; width: 5px; height: 5px; background-color: var(--brand-solid); border-radius: 50%; display: none; box-shadow: 0 0 8px var(--brand-solid); }
-        .cal-cell.has-note .indicator-dot { display: block; }
-        .cal-cell.profit { border-color: rgba(16, 185, 129, 0.4); box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05); }
-        .cal-cell.loss { border-color: rgba(244, 63, 94, 0.4); box-shadow: inset 0 0 20px rgba(244, 63, 94, 0.05); }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); width: 100%; max-width: 480px; padding: 32px; box-shadow: 0 24px 48px rgba(0,0,0,0.6); position: relative; }
-        .modal-close { position: absolute; top: 24px; right: 24px; background: var(--bg-input); border: none; color: var(--text-secondary); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
-        
-        .textarea-custom {
-            width: 100%; background: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 16px;
-            font-family: var(--font-sans); font-size: 14px; margin-top: 12px; resize: vertical; min-height: 120px;
-            border-radius: var(--radius-md); transition: 0.2s; line-height: 1.6;
-        }
-        .textarea-custom:focus { border-color: var(--brand-solid); outline:none; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
-
-        .report-panel { background: var(--bg-app); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-top: 20px; display: none; }
-        .report-list-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-secondary); }
-        .report-list-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .report-list-item span:last-child { font-weight: 600; }
-
-        .ut-tooltip { position: fixed; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); padding: 12px 16px; pointer-events: none; opacity: 0; z-index: 2000; font-family: var(--font-sans); transition: opacity 0.15s; display: flex; flex-direction: column; gap: 4px; }
-        .ut-tooltip.show { opacity: 1; }
-        .tt-date { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tt-val { font-size: 16px; font-weight: 700; }
-    </style>
-</head>
-<body>
-
-<div class="app-header">
-    <div class="app-logo">U</div>
-    <div class="app-title">UltraTrader Journal</div>
-</div>
-
-<div class="container">
-
-    <div class="metrics-row">
-        <div class="metric-widget">
-            <div class="metric-info">
-                <div class="metric-label">Net Profit / Loss</div>
-                <div class="metric-value" id="statTotalPnl">₹0</div>
-            </div>
-        </div>
-        
-        <div class="metric-widget">
-            <div class="metric-info">
-                <div class="metric-label">Win Rate</div>
-                <div class="metric-value text-profit" id="winRateVal">0%</div>
-            </div>
-            <div class="gauge-mini-wrap">
-                <canvas id="winGauge"></canvas>
-            </div>
-        </div>
-
-        <div class="metric-widget">
-            <div class="metric-info">
-                <div class="metric-label">Profit Factor</div>
-                <div class="metric-value" style="color:var(--brand-solid)" id="pfVal">0.0</div>
-            </div>
-            <div class="gauge-mini-wrap">
-                <canvas id="pfGauge"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="dashboard-grid">
-        
-        <div style="display: flex; flex-direction: column; gap: 24px;">
-            
-            <div class="ut-card">
-                <div class="ut-card-title">Log New Trade</div>
-                
-                <div class="form-group">
-                    <span class="form-label">Execution Date</span>
-                    <input type="date" id="dateInput">
-                </div>
-                
-                <div class="form-group">
-                    <span class="form-label">Strategy / Setup</span>
-                    <div class="pill-group" id="categoryChips">
-                        <button class="pill active" onclick="selectCategory('My Algo', this)">My Algo</button>
-                        <button class="pill" onclick="selectCategory('Tez Algo', this)">Tez Algo</button>
-                        <button class="pill" onclick="selectCategory('Ironfly', this)">Ironfly</button>
-                        <button class="pill" onclick="selectCategory('Equity', this)">Equity</button>
-                        <button class="pill" onclick="selectCategory('Commodity', this)">Commodity</button>
-                    </div>
-                </div>
-                
-                <div id="subCategorySection" class="visible">
-                    <span class="form-label">Instrument Spec</span>
-                    <div class="pill-group" id="subChips">
-                        <button class="pill active" onclick="selectSub('Nifty', this)">Nifty</button>
-                        <button class="pill" onclick="selectSub('Banknifty', this)">Banknifty</button>
-                        <button class="pill" onclick="selectSub('Sensex', this)">Sensex</button>
-                    </div>
-                </div>
-                
-                <div class="form-group" style="margin-top: 24px;">
-                    <span class="form-label">Net Result (₹)</span>
-                    <input type="number" id="pnlInput" placeholder="0.00" step="0.01">
-                </div>
-                
-                <button class="btn-gradient" onclick="addTrade()">Save Trade</button>
-            </div>
-
-            <div class="ut-card" style="padding: 20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-ghost" onclick="exportData()">Export JSON</button>
-                        <button class="btn-ghost" onclick="document.getElementById('importFile').click()">Import</button>
-                        <input type="file" id="importFile" hidden onchange="importData(this)">
-                    </div>
-                    <button class="btn-ghost btn-danger" onclick="clearAll()">Reset</button>
-                </div>
-            </div>
-
-            <div class="ut-card">
-                <div class="ut-card-title">Custom Report Builder</div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <input type="date" id="repStart"><input type="date" id="repEnd">
-                </div>
-                <button class="btn-ghost" style="width:100%; margin-top:16px; padding:12px; background:var(--bg-app);" onclick="runReport()">Generate Analytics</button>
-                
-                <div id="reportBox" class="report-panel">
-                    <div class="form-label">Period Net P/L</div>
-                    <div id="repTotal" style="font-size: 28px; font-weight: 700; margin-bottom: 16px; line-height:1;">₹0</div>
-                    <div class="form-label">Strategy Breakdown</div>
-                    <div id="repBreakdown"></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 24px;">
-            
-            <div class="ut-card">
-                <div class="cal-header">
-                    <div class="cal-title" id="calMonthYear">Month</div>
-                    <div class="cal-nav-group">
-                        <button class="cal-btn" onclick="moveMonth(-1)">‹</button>
-                        <button class="cal-btn" onclick="moveMonth(1)">›</button>
-                    </div>
-                </div>
-                <div class="cal-grid" id="calGrid"></div>
-            </div>
-
-            <div class="ut-card">
-                <div class="ut-card-title">Performance Telemetry</div>
-                <div class="stats-grid">
-                    <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTrade">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWin">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">Avg Loss</div><div class="val text-loss" id="statAvgLoss">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">Best Trade</div><div class="val text-profit" id="statMaxWin">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">Worst Trade</div><div class="val text-loss" id="statMaxLoss">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">Max Drawdown</div><div class="val text-loss" id="statMaxDD">₹0</div></div>
-                    <div class="stat-item"><div class="lbl">DD Duration</div><div class="val" id="statDDDuration">0d</div></div>
-                    <div class="stat-item"><div class="lbl">Total Trades</div><div class="val" id="statTradeCount">0</div></div>
-                </div>
-            </div>
-
-            <div class="ut-card">
-                <div class="ut-card-title">Equity Curve</div>
-                <div style="height: 280px; width: 100%;"><canvas id="mainChart"></canvas></div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div id="iosTooltip" class="ut-tooltip"></div>
-
-<div class="modal-overlay" id="modal">
-    <div class="modal-box">
-        <button class="modal-close" onclick="closeModal()">✕</button>
-        <h2 id="modalTitle" style="font-size:20px; font-weight:600; margin-bottom: 24px;">Details</h2>
-        
-        <div id="modalContent"></div>
-        <div id="noteSection"></div>
-    </div>
-</div>
-
-<script>
+// These variables now act ONLY as a read-only mirror of your Google Sheet.
+    // They are completely overwritten on every database fetch.
     let trades = [];
     let notesData = {};
     
@@ -400,12 +25,13 @@
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
     Chart.defaults.plugins.tooltip.displayColors = false;
 
+    // --- API CORE ---
+    
     async function apiGet() {
         const res = await fetch(`${API_URL}?action=getData`, {
             method: 'GET',
             redirect: 'follow'
         });
-        
         if (!res.ok) throw new Error("Network response was not ok");
         return await res.json();
     }
@@ -417,22 +43,33 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
             body: JSON.stringify({ action, ...payload })
         });
-        
         if (!res.ok) throw new Error("Network response was not ok");
         return await res.json();
     }
 
-    async function loadData() {
+    // --- STATELESS DATA SYNC ---
+    
+    // This is the SINGLE source of truth for your UI.
+    async function syncWithSheet() {
         try {
             const data = await apiGet();
+            
+            // Overwrite local state entirely with fresh database state
             trades = (data.trades || []).sort((a,b) => new Date(a.date) - new Date(b.date));
             notesData = data.notes || {};
+            
+            // Rebuild the entire interface from scratch
             updateUI();
         } catch(e) {
             console.error(e);
             alert("Cannot connect to Google Sheets. Please check your internet or the Apps Script deployment.");
         }
     }
+
+    // Initialize app by syncing with the sheet
+    const loadData = syncWithSheet;
+
+    // --- WRITE OPERATIONS ---
 
     async function addTrade() {
         const date = document.getElementById('dateInput').value;
@@ -441,34 +78,46 @@
 
         const newTrade = { id: Date.now(), date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Tez Algo')?selectedSub:'-', pnl };
 
-        trades.push(newTrade);
-        trades.sort((a,b) => new Date(a.date) - new Date(b.date));
-
+        // 1. Write to database
         await apiPost('addTrade', { trade: newTrade });
         document.getElementById('pnlInput').value = '';
-        updateUI();
+        
+        // 2. Fetch fresh data and completely rebuild UI
+        await syncWithSheet();
     }
 
     async function del(id) {
-        trades = trades.filter(t => t.id !== id);
+        // 1. Delete from database
         await apiPost('deleteTrade', { id });
         closeModal();
-        updateUI();
+        
+        // 2. Fetch fresh data and completely rebuild UI
+        await syncWithSheet();
     }
 
     async function saveNoteEntry(d) {
         const val = document.getElementById('modalNote').value;
-        if(val.trim()==="") delete notesData[d]; else notesData[d] = val;
-        await apiPost('saveNotes', { notes: notesData });
+        
+        // Construct the new payload based on current state to send to backend
+        const updatedNotes = { ...notesData };
+        if(val.trim() === "") delete updatedNotes[d]; 
+        else updatedNotes[d] = val;
+        
+        // 1. Save to database
+        await apiPost('saveNotes', { notes: updatedNotes });
         closeModal();
-        updateUI();
+        
+        // 2. Fetch fresh data and completely rebuild UI
+        await syncWithSheet();
     }
 
     async function clearAll() {
         if(confirm("Clear all journal data? This action is irreversible.")) {
-            trades = []; notesData = {};
+            // 1. Clear database
             await apiPost('clearAll');
-            updateUI();
+            
+            // 2. Sync to clear UI
+            await syncWithSheet();
         }
     }
 
@@ -476,11 +125,19 @@
         const r = new FileReader();
         r.onload = async e => {
             const d = JSON.parse(e.target.result);
-            if(Array.isArray(d)) trades = d;
-            else { trades = d.trades || []; notesData = d.notes || {}; }
-            trades.sort((a,b) => new Date(a.date) - new Date(b.date));
-            await apiPost('import', { trades, notes: notesData });
-            updateUI();
+            let importedTrades = [];
+            let importedNotes = {};
+            
+            if(Array.isArray(d)) importedTrades = d;
+            else { importedTrades = d.trades || []; importedNotes = d.notes || {}; }
+            
+            importedTrades.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            // 1. Overwrite database
+            await apiPost('import', { trades: importedTrades, notes: importedNotes });
+            
+            // 2. Sync UI
+            await syncWithSheet();
         };
         r.readAsText(inp.files[0]);
     }
@@ -493,6 +150,8 @@
         a.download = 'ultratrader_backup.json';
         a.click();
     }
+
+    // --- UI CONTROLS ---
 
     function selectCategory(cat, el) {
         selectedCat = cat;
@@ -514,6 +173,8 @@
         renderCalendar(); 
         renderCharts(); 
     }
+
+    // --- RENDER FUNCTIONS (Stateless, driven entirely by fetch) ---
 
     function renderTelemetry() {
         if(trades.length === 0) {
@@ -643,10 +304,14 @@
 
     function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); updateUI(); }
     
+    // Completely rebuilds the grid from scratch based on current state
     function renderCalendar() {
         const y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
-        const grid = document.getElementById('calGrid'); grid.innerHTML = '';
+        
+        const grid = document.getElementById('calGrid'); 
+        grid.innerHTML = ''; // Wipes previous calendar state
+        
         ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
         const fDay = new Date(y,m,1).getDay(); const days = new Date(y,m+1,0).getDate();
         
@@ -766,6 +431,3 @@
 
     // START APP
     loadData();
-</script>
-</body>
-</html>
