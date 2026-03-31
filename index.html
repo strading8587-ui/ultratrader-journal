@@ -283,7 +283,7 @@
                     <span class="form-label">Strategy / Setup</span>
                     <div class="pill-group" id="categoryChips">
                         <button class="pill active" onclick="selectCategory('My Algo', this)">My Algo</button>
-                        <button class="pill" onclick="selectCategory('Tez Algo', this)">Tez Algo</button>
+                        <button class="pill" onclick="selectCategory('Other Algos', this)">Other Algos</button>
                         <button class="pill" onclick="selectCategory('Ironfly', this)">Ironfly</button>
                         <button class="pill" onclick="selectCategory('Equity', this)">Equity</button>
                         <button class="pill" onclick="selectCategory('Commodity', this)">Commodity</button>
@@ -503,7 +503,7 @@
         const pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
 
-        const newTrade = { id: Date.now(), date: date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Tez Algo')?selectedSub:'-', pnl };
+        const newTrade = { id: Date.now(), date: date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Other Algos')?selectedSub:'-', pnl };
 
         await apiPost('addTrade', { trade: newTrade });
         document.getElementById('pnlInput').value = '';
@@ -585,7 +585,7 @@
         document.querySelectorAll('#categoryChips .pill').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         const subSec = document.getElementById('subCategorySection');
-        if (cat === 'My Algo' || cat === 'Tez Algo') subSec.classList.add('visible');
+        if (cat === 'My Algo' || cat === 'Other Algos') subSec.classList.add('visible');
         else { subSec.classList.remove('visible'); selectedSub = '-'; }
     }
     
