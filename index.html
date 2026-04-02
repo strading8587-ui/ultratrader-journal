@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-    <title>UltraTrader Style Journal</title>
+    <title>ROCKY BULL Journal</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* --- ULTRATRADER INSPIRED THEME --- */
+        /* --- ROCKY BULL THEME --- */
         :root {
             --bg-base: #000000;
             --bg-app: #09090b;
@@ -64,18 +64,16 @@
             margin: 0 auto 30px auto;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
         .app-logo {
-            width: 32px; height: 32px;
-            background: var(--brand-gradient);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 18px; color: #fff;
+            width: 44px; height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
             box-shadow: var(--shadow-glow);
         }
         .app-title {
-            font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
+            font-size: 22px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase;
         }
 
         .container { max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
@@ -232,8 +230,8 @@
 <body>
 
 <div class="app-header">
-    <div class="app-logo">U</div>
-    <div class="app-title">UltraTrader Journal</div>
+    <img class="app-logo" src="logo.png" alt="ROCKY BULL Logo">
+    <div class="app-title">ROCKY BULL</div>
 </div>
 
 <div class="container">
@@ -574,7 +572,7 @@
         const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'ultratrader_backup.json';
+        a.download = 'rocky_bull_backup.json';
         a.click();
     }
 
