@@ -667,13 +667,18 @@
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
 
-        // Drawdown uses pure trades (Charges are excluded to prevent fake monthly drawdowns)
+        // Drawdown Fix: Aggregate trades day-by-day first
+        const dailyTradePnL = {};
+        trades.forEach(t => {
+            dailyTradePnL[t.date] = (dailyTradePnL[t.date] || 0) + t.pnl;
+        });
+
         let cumulative = 0; let peak = -Infinity; let maxDD = 0;
         let ddPeakDate = null; let maxDD_StartDate = null; let maxDD_EndDate = null;
 
-        [...trades].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
-            cumulative += t.pnl;
-            const tDate = new Date(t.date);
+        Object.keys(dailyTradePnL).sort().forEach(dateStr => {
+            cumulative += dailyTradePnL[dateStr];
+            const tDate = new Date(dateStr);
             if(cumulative > peak) { peak = cumulative; ddPeakDate = tDate; } 
             const dd = cumulative - peak;
             if(dd < maxDD) { maxDD = dd; maxDD_StartDate = ddPeakDate; maxDD_EndDate = tDate; }
@@ -735,9 +740,6 @@
         dates.forEach(d => { cum += dateMap[d]; eq.push(cum); });
         
         const ctx1 = document.getElementById('mainChart').getContext('2d');
-        const gradient = ctx1.createLinearGradient(0,0,0,280); 
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
         
         if(chart1) chart1.destroy();
         chart1 = new Chart(ctx1, { 
@@ -745,11 +747,23 @@
             data: { 
                 labels: dates, 
                 datasets: [{ 
-                    label: 'Net Equity', data: eq, 
-                    borderColor: '#8b5cf6', borderWidth: 2, 
-                    backgroundColor: gradient, fill: true, 
-                    pointBackgroundColor: '#8b5cf6', pointBorderColor: '#fff', pointBorderWidth: 1,
-                    pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20,
+                    label: 'Net Equity', 
+                    data: eq, 
+                    borderWidth: 2, 
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(16, 185, 129, 0.15)', // Green shade above zero
+                        below: 'rgba(244, 63, 94, 0.15)'   // Red shade below zero
+                    },
+                    segment: {
+                        borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' // Green line above, Red line below
+                    },
+                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
+                    pointBorderColor: '#fff', 
+                    pointBorderWidth: 1,
+                    pointRadius: 0, 
+                    pointHoverRadius: 6, 
+                    pointHitRadius: 20,
                     tension: 0.4
                 }] 
             }, 
