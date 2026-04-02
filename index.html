@@ -66,13 +66,12 @@
             align-items: center;
             gap: 14px;
         }
-        /* Style for the text title, in BMW blue color and bold */
         .app-title {
             font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.5px;
             text-transform: uppercase;
-            color: #0050B3; /* Use BMW Blue hex code */
+            color: #0050B3; 
         }
 
         .container { max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
@@ -324,8 +323,12 @@
                 <div id="reportBox" class="report-panel">
                     <div class="form-label">Period Net P/L</div>
                     <div id="repTotal" style="font-size: 28px; font-weight: 700; margin-bottom: 16px; line-height:1;">₹0</div>
-                    <div class="form-label">Strategy Breakdown</div>
-                    <div id="repBreakdown"></div>
+                    
+                    <div class="form-label" style="color:var(--brand-solid);">Strategy Breakdown</div>
+                    <div id="repBreakdown" style="margin-bottom: 16px;"></div>
+                    
+                    <div class="form-label" style="color:var(--brand-solid);">Instrument Breakdown</div>
+                    <div id="repInstBreakdown"></div>
                 </div>
             </div>
         </div>
@@ -862,8 +865,15 @@
         if(!s || !e) return;
         const sub = trades.filter(t => t.date >= s && t.date <= e); 
         let tot = sub.reduce((a,b)=>a+b.pnl,0);
-        let bd = {}; 
-        sub.forEach(t => bd[t.category] = (bd[t.category]||0) + t.pnl);
+        
+        let bd = {};      // Strategy Breakdown
+        let instBd = {};  // Instrument Breakdown
+        
+        sub.forEach(t => {
+            bd[t.category] = (bd[t.category]||0) + t.pnl;
+            const instName = t.subCategory === '-' ? 'Unspecified' : t.subCategory;
+            instBd[instName] = (instBd[instName]||0) + t.pnl;
+        });
         
         if(isChargesOn) {
             const startM = s.substring(0, 7);
@@ -878,6 +888,7 @@
             if(reportCharges > 0) {
                 tot -= reportCharges;
                 bd['Other Charges & Fees'] = -reportCharges; 
+                instBd['Other Charges & Fees'] = -reportCharges;
             }
         }
 
@@ -885,11 +896,20 @@
         totEl.innerText = `₹${tot.toLocaleString()}`; 
         totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
+        // Render Strategy Breakdown
         let h = ''; 
         for(let k in bd) {
              h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
         }
         document.getElementById('repBreakdown').innerHTML = h; 
+
+        // Render Instrument Breakdown
+        let hInst = '';
+        for(let k in instBd) {
+             hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
+        }
+        document.getElementById('repInstBreakdown').innerHTML = hInst;
+
         document.getElementById('reportBox').style.display = 'block';
     }
 
