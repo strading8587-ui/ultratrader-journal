@@ -97,6 +97,7 @@
         .ut-card-title {
             font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
+            text-transform: uppercase;
         }
 
         .metrics-row { 
@@ -302,6 +303,27 @@
                 <button class="btn-gradient" onclick="addTrade()">Save Trade</button>
             </div>
 
+            <div class="ut-card">
+                <div class="ut-card-title">DAY WISE ALGO P/L</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
+                        <div class="lbl">Mon</div><div class="val" id="algoMon">₹0</div>
+                    </div>
+                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
+                        <div class="lbl">Tue</div><div class="val" id="algoTue">₹0</div>
+                    </div>
+                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
+                        <div class="lbl">Wed</div><div class="val" id="algoWed">₹0</div>
+                    </div>
+                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
+                        <div class="lbl">Thu</div><div class="val" id="algoThu">₹0</div>
+                    </div>
+                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
+                        <div class="lbl">Fri</div><div class="val" id="algoFri">₹0</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="ut-card" style="padding: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap:8px;">
@@ -382,9 +404,13 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Equity Curve & Daily P/L</div>
-                <div style="height: 280px; width: 100%; margin-bottom: 24px;"><canvas id="mainChart"></canvas></div>
-                <div style="height: 180px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
+                <div class="ut-card-title">Equity Curve</div>
+                <div style="height: 280px; width: 100%;"><canvas id="mainChart"></canvas></div>
+            </div>
+
+            <div class="ut-card">
+                <div class="ut-card-title">Daily P/L (Current Month)</div>
+                <div style="height: 220px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
             </div>
 
         </div>
@@ -405,7 +431,6 @@
 
 <script>
     // These variables now act ONLY as a read-only mirror of your Google Sheet.
-    // They are completely overwritten on every database fetch.
     let trades = [];
     let notesData = {};
     let isChargesOn = false;
@@ -617,6 +642,7 @@
 
     function updateUI() { 
         updateChargeUI();
+        renderDayWiseAlgo(); // New Algo Day Tracker
         renderTelemetry(); 
         renderGauges(); 
         renderCalendar(); 
@@ -624,6 +650,31 @@
     }
 
     // --- RENDER FUNCTIONS ---
+
+    function renderDayWiseAlgo() {
+        let dayTotals = [0, 0, 0, 0, 0]; // Mon to Fri
+        
+        trades.forEach(t => {
+            if (t.category === 'My Algo' || t.category === 'Other Algos') {
+                const parts = t.date.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    const dayOfWeek = d.getDay(); // 0 is Sunday, 1 is Monday
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        dayTotals[dayOfWeek - 1] += t.pnl;
+                    }
+                }
+            }
+        });
+        
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        days.forEach((d, i) => {
+            const el = document.getElementById(`algo${d}`);
+            const val = dayTotals[i];
+            el.innerText = `₹${val.toLocaleString()}`;
+            el.className = `val ${val >= 0 ? 'text-profit' : 'text-loss'}`;
+        });
+    }
 
     function renderTelemetry() {
         if(trades.length === 0) {
@@ -731,29 +782,21 @@
     }
 
     function renderCharts() {
-        // Prepare Daily P/L data
-        const dateMap = {}; 
-        trades.forEach(t => dateMap[t.date] = (dateMap[t.date] || 0) + t.pnl);
+        // --- 1. Global Equity Chart (All-time Cumulative) ---
+        const globalDateMap = {}; 
+        trades.forEach(t => globalDateMap[t.date] = (globalDateMap[t.date] || 0) + t.pnl);
 
-        const dates = Object.keys(dateMap).sort();
-        let eq = [], cum = 0, dailyPnl = [];
-        dates.forEach(d => { 
-            cum += dateMap[d]; 
-            eq.push(cum); 
-            dailyPnl.push(dateMap[d]);
-        });
+        const globalDates = Object.keys(globalDateMap).sort();
+        let eq = [], cum = 0;
+        globalDates.forEach(d => { cum += globalDateMap[d]; eq.push(cum); });
         
-        // --- Equity Curve Line Chart ---
         const ctx1 = document.getElementById('mainChart').getContext('2d');
-        const gradient = ctx1.createLinearGradient(0,0,0,280); 
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
         
         if(chart1) chart1.destroy();
         chart1 = new Chart(ctx1, { 
             type: 'line', 
             data: { 
-                labels: dates, 
+                labels: globalDates, 
                 datasets: [{ 
                     label: 'Net Equity', 
                     data: eq, 
@@ -764,7 +807,7 @@
                         below: 'rgba(244, 63, 94, 0.15)'   // Red shade below zero
                     },
                     segment: {
-                        borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' // Green line above, Red line below
+                        borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e'
                     },
                     pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
                     pointBorderColor: '#fff', 
@@ -789,16 +832,31 @@
             } 
         });
 
-        // --- Daily P/L Bar Chart ---
+        // --- 2. Monthly Daily P/L Bar Chart ---
+        const y = curDate.getFullYear();
+        const m = curDate.getMonth();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const monthPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
+        
+        const monthLabels = [];
+        const monthData = [];
+        
+        for(let i = 1; i <= daysInMonth; i++) {
+            const dateStr = `${monthPrefix}-${String(i).padStart(2,'0')}`;
+            monthLabels.push(String(i)); 
+            const dayPnl = trades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl, 0);
+            monthData.push(dayPnl);
+        }
+
         const ctx2 = document.getElementById('dailyPnlChart').getContext('2d');
         if(chart2) chart2.destroy();
         chart2 = new Chart(ctx2, {
             type: 'bar',
             data: {
-                labels: dates,
+                labels: monthLabels,
                 datasets: [{
                     label: 'Daily P/L',
-                    data: dailyPnl,
+                    data: monthData,
                     backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
                     borderRadius: 4
                 }]
@@ -807,7 +865,10 @@
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { display: false },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#71717a', font: { size: 10 } }
+                    },
                     y: {
                         grid: { color: '#1f1f22', tickLength: 0 },
                         border: { display: false }
