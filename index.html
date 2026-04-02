@@ -382,8 +382,9 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Equity Curve</div>
-                <div style="height: 280px; width: 100%;"><canvas id="mainChart"></canvas></div>
+                <div class="ut-card-title">Equity Curve & Daily P/L</div>
+                <div style="height: 280px; width: 100%; margin-bottom: 24px;"><canvas id="mainChart"></canvas></div>
+                <div style="height: 180px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
             </div>
 
         </div>
@@ -415,7 +416,7 @@
     let selectedCat = 'My Algo'; 
     let selectedSub = 'Nifty';
     let curDate = new Date();
-    let chart1, gaugeWin, gaugePf;
+    let chart1, chart2, gaugeWin, gaugePf;
     const tooltip = document.getElementById('iosTooltip');
 
     document.getElementById('dateInput').valueAsDate = curDate;
@@ -730,15 +731,23 @@
     }
 
     function renderCharts() {
-        // Equity Chart purely shows the execution timeline (Gross) to avoid artificial monthly cliff-drops
+        // Prepare Daily P/L data
         const dateMap = {}; 
         trades.forEach(t => dateMap[t.date] = (dateMap[t.date] || 0) + t.pnl);
 
         const dates = Object.keys(dateMap).sort();
-        let eq = [], cum = 0;
-        dates.forEach(d => { cum += dateMap[d]; eq.push(cum); });
+        let eq = [], cum = 0, dailyPnl = [];
+        dates.forEach(d => { 
+            cum += dateMap[d]; 
+            eq.push(cum); 
+            dailyPnl.push(dateMap[d]);
+        });
         
+        // --- Equity Curve Line Chart ---
         const ctx1 = document.getElementById('mainChart').getContext('2d');
+        const gradient = ctx1.createLinearGradient(0,0,0,280); 
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
         
         if(chart1) chart1.destroy();
         chart1 = new Chart(ctx1, { 
@@ -778,6 +787,34 @@
                 },
                 interaction: { mode: 'index', intersect: false }
             } 
+        });
+
+        // --- Daily P/L Bar Chart ---
+        const ctx2 = document.getElementById('dailyPnlChart').getContext('2d');
+        if(chart2) chart2.destroy();
+        chart2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Daily P/L',
+                    data: dailyPnl,
+                    backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        grid: { color: '#1f1f22', tickLength: 0 },
+                        border: { display: false }
+                    }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
         });
     }
 
