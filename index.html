@@ -66,6 +66,7 @@
             align-items: center;
             gap: 14px;
         }
+        /* BMW Blue Text Logo */
         .app-title {
             font-size: 22px;
             font-weight: 800;
@@ -305,22 +306,12 @@
 
             <div class="ut-card">
                 <div class="ut-card-title">DAY WISE ALGO P/L</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
-                        <div class="lbl">Mon</div><div class="val" id="algoMon">₹0</div>
-                    </div>
-                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
-                        <div class="lbl">Tue</div><div class="val" id="algoTue">₹0</div>
-                    </div>
-                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
-                        <div class="lbl">Wed</div><div class="val" id="algoWed">₹0</div>
-                    </div>
-                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
-                        <div class="lbl">Thu</div><div class="val" id="algoThu">₹0</div>
-                    </div>
-                    <div class="stat-item" style="flex: 1; min-width: 55px; padding: 12px 4px; text-align: center;">
-                        <div class="lbl">Fri</div><div class="val" id="algoFri">₹0</div>
-                    </div>
+                <div style="display: flex; flex-direction: column;">
+                    <div class="report-list-item"><span>Monday</span><span id="algoMon" style="font-weight: 600;">₹0</span></div>
+                    <div class="report-list-item"><span>Tuesday</span><span id="algoTue" style="font-weight: 600;">₹0</span></div>
+                    <div class="report-list-item"><span>Wednesday</span><span id="algoWed" style="font-weight: 600;">₹0</span></div>
+                    <div class="report-list-item"><span>Thursday</span><span id="algoThu" style="font-weight: 600;">₹0</span></div>
+                    <div class="report-list-item"><span>Friday</span><span id="algoFri" style="font-weight: 600;">₹0</span></div>
                 </div>
             </div>
 
@@ -642,7 +633,7 @@
 
     function updateUI() { 
         updateChargeUI();
-        renderDayWiseAlgo(); // New Algo Day Tracker
+        renderDayWiseAlgo();
         renderTelemetry(); 
         renderGauges(); 
         renderCalendar(); 
@@ -672,7 +663,7 @@
             const el = document.getElementById(`algo${d}`);
             const val = dayTotals[i];
             el.innerText = `₹${val.toLocaleString()}`;
-            el.className = `val ${val >= 0 ? 'text-profit' : 'text-loss'}`;
+            el.className = val >= 0 ? 'text-profit' : 'text-loss';
         });
     }
 
