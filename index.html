@@ -176,6 +176,8 @@
         }
         .pill:hover { color: var(--text-primary); text-shadow: 0 0 8px rgba(255,255,255,0.3); }
         .pill.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid var(--border-subtle); }
+        .pill.add-new { border: 1px dashed var(--brand-solid); color: var(--brand-solid); background: rgba(139, 92, 246, 0.05); }
+        .pill.add-new:hover { background: var(--brand-solid); color: #fff; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
 
         #subCategorySection { overflow: hidden; max-height: 0; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #subCategorySection.visible { max-height: 120px; opacity: 1; margin-top: 15px; }
@@ -316,23 +318,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <span class="form-label">Strategy / Setup</span>
-                    <div class="pill-group" id="categoryChips">
-                        <button class="pill active" onclick="selectCategory('My Algo', this)">My Algo</button>
-                        <button class="pill" onclick="selectCategory('Other Algos', this)">Other Algos</button>
-                        <button class="pill" onclick="selectCategory('Ironfly', this)">Ironfly</button>
-                        <button class="pill" onclick="selectCategory('Equity', this)">Equity</button>
-                        <button class="pill" onclick="selectCategory('Commodity', this)">Commodity</button>
-                    </div>
+                    <span class="form-label">Instrument</span>
+                    <div class="pill-group" id="instrumentChips">
+                        </div>
                 </div>
                 
-                <div id="subCategorySection" class="visible">
-                    <span class="form-label">Instrument Spec</span>
-                    <div class="pill-group" id="subChips">
-                        <button class="pill active" onclick="selectSub('Nifty', this)">Nifty</button>
-                        <button class="pill" onclick="selectSub('Banknifty', this)">Banknifty</button>
-                        <button class="pill" onclick="selectSub('Sensex', this)">Sensex</button>
-                    </div>
+                <div class="form-group">
+                    <span class="form-label">Strategy / Setup</span>
+                    <div class="pill-group" id="strategyChips">
+                        </div>
                 </div>
                 
                 <div class="form-group" style="margin-top: 24px;">
@@ -468,8 +462,12 @@
     // YOUR GOOGLE SHEETS API
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
 
-    let selectedCat = 'My Algo'; 
-    let selectedSub = 'Nifty';
+    // UI State for dynamic strategy picker
+    const DEFAULT_INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
+    let selectedInstrument = 'Nifty';
+    let selectedStrategy = 'My Algo';
+    let customStrategies = {};
+
     let curDate = new Date();
     let chart1, chart2, gaugeWin, gaugePf;
     const tooltip = document.getElementById('iosTooltip');
@@ -532,15 +530,38 @@
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
             
             notesData = {};
+            
+            // Base fallback configurations
+            customStrategies = {
+                'Nifty': ['My Algo', 'Other Algos', 'Ironfly'],
+                'Banknifty': ['My Algo', 'Other Algos', 'Ironfly'],
+                'Sensex': ['My Algo', 'Other Algos', 'Ironfly'],
+                'Equity': ['Cash', 'Swing', 'Intraday'],
+                'Commodity': ['Gold', 'Crude', 'Silver']
+            };
+
             if (data.notes) {
                 for (let key in data.notes) {
                     if(key.startsWith('CHARGE_')) {
                         notesData[key] = data.notes[key];
+                    } else if(key.startsWith('STRATS_')) {
+                        const inst = key.replace('STRATS_', '');
+                        customStrategies[inst] = data.notes[key].split('|||');
                     } else {
                         notesData[normalizeDateStr(key)] = data.notes[key];
                     }
                 }
             }
+
+            // Auto-discover any old strategies to ensure they aren't lost
+            trades.forEach(t => {
+                let inst = t.subCategory;
+                if(!inst || inst === '-') inst = 'Equity'; 
+                if(!customStrategies[inst]) customStrategies[inst] = [];
+                if(!customStrategies[inst].includes(t.category)) {
+                    customStrategies[inst].push(t.category);
+                }
+            });
             
             updateUI();
         } catch(e) {
@@ -558,7 +579,13 @@
         const pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
 
-        const newTrade = { id: Date.now(), date: date, category: selectedCat, subCategory: (selectedCat==='My Algo'||selectedCat==='Other Algos')?selectedSub:'-', pnl };
+        const newTrade = { 
+            id: Date.now(), 
+            date: date, 
+            category: selectedStrategy, // Strategy is the primary category
+            subCategory: selectedInstrument, // Instrument is the subCategory
+            pnl 
+        };
 
         await apiPost('addTrade', { trade: newTrade });
         document.getElementById('pnlInput').value = '';
@@ -598,6 +625,31 @@
         await syncWithSheet();
     }
 
+    async function addNewStrategy() {
+        const newStrat = prompt(`Enter a new strategy name for ${selectedInstrument}:`);
+        if(!newStrat || newStrat.trim() === "") return;
+        
+        const cleanStrat = newStrat.trim();
+        if(!customStrategies[selectedInstrument]) customStrategies[selectedInstrument] = [];
+        if(customStrategies[selectedInstrument].includes(cleanStrat)) return alert("Strategy already exists!");
+        
+        customStrategies[selectedInstrument].push(cleanStrat);
+        selectedStrategy = cleanStrat; 
+        
+        // Prepare payload, preserve existing CHARGE and STRATS data
+        const updatedNotes = { ...notesData };
+        // We append the STRATS key onto the payload being sent
+        updatedNotes['STRATS_' + selectedInstrument] = customStrategies[selectedInstrument].join('|||');
+        
+        renderTradeLogUI(); // Optimistic local UI update
+        
+        try {
+            await apiPost('saveNotes', { notes: updatedNotes });
+        } catch(e) {
+            alert("Failed to sync new strategy to server.");
+        }
+    }
+
     async function clearAll() {
         if(confirm("Clear all journal data? This action is irreversible.")) {
             await apiPost('clearAll');
@@ -635,27 +687,11 @@
 
     // --- UI CONTROLS ---
 
-    function selectCategory(cat, el) {
-        selectedCat = cat;
-        document.querySelectorAll('#categoryChips .pill').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        const subSec = document.getElementById('subCategorySection');
-        if (cat === 'My Algo' || cat === 'Other Algos') subSec.classList.add('visible');
-        else { subSec.classList.remove('visible'); selectedSub = '-'; }
-    }
-    
-    function selectSub(sub, el) {
-        selectedSub = sub;
-        document.querySelectorAll('#subChips .pill').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-    }
-
     function toggleCharges() { 
         isChargesOn = document.getElementById('chargesToggle').checked; 
         updateUI(); 
     }
 
-    // Updates the charge input based on the calendar's current month
     function updateChargeUI() {
         document.getElementById('chargesToggle').checked = isChargesOn;
         const y = curDate.getFullYear();
@@ -665,13 +701,13 @@
         document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + ym] || '';
     }
 
-    // Listener so if user manually changes month input, it updates the amount without syncing calendar
     document.getElementById('chargeMonth').addEventListener('change', (e) => {
         document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + e.target.value] || '';
     });
 
     function updateUI() { 
         updateChargeUI();
+        renderTradeLogUI();
         renderDayWiseAlgo();
         renderTelemetry(); 
         renderGauges(); 
@@ -681,10 +717,56 @@
 
     // --- RENDER FUNCTIONS ---
 
+    function renderTradeLogUI() {
+        // Render Instruments
+        const instContainer = document.getElementById('instrumentChips');
+        instContainer.innerHTML = '';
+        const allInst = [...new Set([...DEFAULT_INSTRUMENTS, ...Object.keys(customStrategies)])];
+        
+        allInst.forEach(inst => {
+            const btn = document.createElement('button');
+            btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`;
+            btn.innerText = inst;
+            btn.onclick = () => { 
+                selectedInstrument = inst; 
+                renderTradeLogUI(); 
+            };
+            instContainer.appendChild(btn);
+        });
+
+        // Render Strategies based on selected Instrument
+        const stratContainer = document.getElementById('strategyChips');
+        stratContainer.innerHTML = '';
+        const strats = customStrategies[selectedInstrument] || [];
+        
+        if (strats.length > 0 && !strats.includes(selectedStrategy)) {
+            selectedStrategy = strats[0];
+        }
+
+        strats.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = `pill ${s === selectedStrategy ? 'active' : ''}`;
+            btn.innerText = s;
+            btn.onclick = () => { 
+                selectedStrategy = s; 
+                renderTradeLogUI(); 
+            };
+            stratContainer.appendChild(btn);
+        });
+
+        // Add custom strategy button
+        const addBtn = document.createElement('button');
+        addBtn.className = 'pill add-new';
+        addBtn.innerText = '+ Add New';
+        addBtn.onclick = addNewStrategy;
+        stratContainer.appendChild(addBtn);
+    }
+
     function renderDayWiseAlgo() {
         let dayTotals = [0, 0, 0, 0, 0]; // Mon to Fri
         
         trades.forEach(t => {
+            // Strictly limits Day Wise P/L to "My Algo" and "Other Algos" logic
             if (t.category === 'My Algo' || t.category === 'Other Algos') {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
@@ -702,7 +784,9 @@
             const el = document.getElementById(`algo${d}`);
             const val = dayTotals[i];
             el.innerText = `₹${val.toLocaleString()}`;
-            el.className = val >= 0 ? 'text-profit' : 'text-loss';
+            // Adjust color based on profit/loss natively without overwriting classes
+            if(val >= 0) { el.style.color = "var(--profit)"; }
+            else { el.style.color = "var(--loss)"; }
         });
     }
 
@@ -998,7 +1082,9 @@
         let instBd = {};  // Instrument Breakdown
         
         sub.forEach(t => {
+            // Strategy is now in the t.category field
             bd[t.category] = (bd[t.category]||0) + t.pnl;
+            // Instrument is now in the t.subCategory field
             const instName = t.subCategory === '-' ? 'Unspecified' : t.subCategory;
             instBd[instName] = (instBd[instName]||0) + t.pnl;
         });
@@ -1047,11 +1133,11 @@
         if(i.length > 0) {
             h += '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 24px;">'; 
             i.forEach(t => {
-                let catText = t.category;
-                if(t.subCategory !== '-') catText += ` <span style="color:var(--text-muted); font-size:12px; font-weight:400;">— ${t.subCategory}</span>`;
+                // UI flips mapping logic. category = Strategy, subCategory = Instrument
+                let titleText = `${t.subCategory} — ${t.category}`;
                 h += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-app); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-                    <div style="font-weight:600; font-size:14px;">${catText}</div>
+                    <div style="font-weight:600; font-size:14px;">${titleText}</div>
                     <div style="display:flex; align-items:center; gap:20px;">
                         <span class="${t.pnl >= 0 ? 'text-profit' : 'text-loss'}" style="font-weight:700; font-size:15px;">₹${t.pnl.toLocaleString()}</span>
                         <button onclick="del(${t.id})" style="background:var(--bg-hover); border:none; color:var(--text-secondary); cursor:pointer; font-size:12px; padding:6px 10px; border-radius:6px; transition:0.2s;">Del</button>
