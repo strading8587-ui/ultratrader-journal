@@ -100,7 +100,6 @@
             overflow: hidden;
             transition: all 0.3s ease;
         }
-        /* Glowing Hover Effect for Cards */
         .ut-card:hover {
             box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
             transform: translateY(-2px);
@@ -124,7 +123,6 @@
             box-shadow: var(--shadow-card);
             transition: all 0.3s ease;
         }
-        /* Glowing Hover Effect for Metric Widgets */
         .metric-widget:hover {
             box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
             transform: translateY(-2px);
@@ -179,8 +177,8 @@
         .pill.add-new { border: 1px dashed var(--brand-solid); color: var(--brand-solid); background: rgba(139, 92, 246, 0.05); }
         .pill.add-new:hover { background: var(--brand-solid); color: #fff; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
 
-        #subCategorySection { overflow: hidden; max-height: 0; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        #subCategorySection.visible { max-height: 120px; opacity: 1; margin-top: 15px; }
+        .del-btn { transition: all 0.2s ease; }
+        .del-btn:hover { text-shadow: 0 0 10px var(--loss); transform: scale(1.05); }
 
         .btn-gradient {
             width: 100%; padding: 16px; background: var(--brand-gradient);
@@ -188,12 +186,7 @@
             font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
             box-shadow: var(--shadow-glow); margin-top: 10px;
         }
-        /* Intense Glowing Hover for Primary Button */
-        .btn-gradient:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); 
-            opacity: 1;
-        }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); opacity: 1; }
         .btn-gradient:active { transform: translateY(1px); box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
 
         .btn-ghost { 
@@ -205,7 +198,6 @@
         .btn-danger { border-color: rgba(244, 63, 94, 0.3); color: var(--loss); }
         .btn-danger:hover { background: var(--loss-glow); color: var(--loss); border-color: var(--loss); box-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
 
-        /* Toggle Switch Styles */
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-input); transition: .3s; border-radius: 22px; border: 1px solid var(--border-subtle); }
@@ -231,7 +223,6 @@
             background: var(--bg-app); color: var(--text-secondary); border-radius: var(--radius-md);
             border: 1px solid transparent;
         }
-        /* Dynamic Glows for Calendar Cells */
         .cal-cell:hover { border-color: rgba(255,255,255,0.3); background: var(--bg-hover); color: var(--text-primary); transform: scale(1.05); z-index: 10; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .cal-cell.weekend { opacity: 0.3; }
         .cal-cell.has-data { color: var(--text-primary); font-weight: 600; background: var(--bg-card); border-color: var(--border-subtle); }
@@ -322,9 +313,18 @@
                     <div class="pill-group" id="instrumentChips">
                         </div>
                 </div>
+
+                <div class="form-group">
+                    <span class="form-label">Execution Type</span>
+                    <div class="pill-group" id="tradeTypeChips">
+                        </div>
+                </div>
                 
                 <div class="form-group">
-                    <span class="form-label">Strategy / Setup</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span class="form-label" style="margin-bottom:0;">Strategy / Setup</span>
+                        <span id="delStratBtn" class="del-btn" style="color:var(--loss); cursor:pointer; font-size:11px; text-transform:uppercase; font-weight:700; display:none;">✕ Delete Active</span>
+                    </div>
                     <div class="pill-group" id="strategyChips">
                         </div>
                 </div>
@@ -454,19 +454,21 @@
 </div>
 
 <script>
-    // These variables now act ONLY as a read-only mirror of your Google Sheet.
+    // These variables act ONLY as a read-only mirror of your Google Sheet.
     let trades = [];
     let notesData = {};
     let isChargesOn = false;
     
+    // UI State for dynamic strategy picker
+    const INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
+    const TRADETYPES = ['My Algo', 'Other Algos', 'Manual'];
+    let selectedInstrument = 'Nifty';
+    let selectedTradeType = 'My Algo';
+    let selectedStrategy = 'Default';
+    let customStrategies = {};
+    
     // YOUR GOOGLE SHEETS API
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
-
-    // UI State for dynamic strategy picker
-    const DEFAULT_INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
-    let selectedInstrument = 'Nifty';
-    let selectedStrategy = 'My Algo';
-    let customStrategies = {};
 
     let curDate = new Date();
     let chart1, chart2, gaugeWin, gaugePf;
@@ -525,41 +527,52 @@
         try {
             const data = await apiGet();
             
+            // Map legacy trades into the new 3-tier format safely
             trades = (data.trades || []).map(t => {
-                return { ...t, date: normalizeDateStr(t.date) };
+                let tradeType = 'Manual';
+                let strategy = t.category;
+                let instrument = t.subCategory && t.subCategory !== '-' ? t.subCategory : 'Unspecified';
+
+                // Check if this is a new "packed" category string
+                if (t.category && t.category.includes(' | ')) {
+                    const parts = t.category.split(' | ');
+                    tradeType = parts[0];
+                    strategy = parts[1];
+                } else {
+                    // Fallback for legacy trades before the 3-tier update
+                    if (t.category === 'My Algo' || t.category === 'Other Algos' || t.category === 'Tez Algo') {
+                        tradeType = t.category === 'Tez Algo' ? 'Other Algos' : t.category;
+                        strategy = 'Default';
+                    } else if (t.category === 'Ironfly' || t.category === 'Commodity' || t.category === 'Equity') {
+                        tradeType = 'Manual';
+                        strategy = t.category;
+                    }
+                }
+                return { ...t, date: normalizeDateStr(t.date), tradeType, strategy, instrument };
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
             
             notesData = {};
-            
-            // Base fallback configurations
-            customStrategies = {
-                'Nifty': ['My Algo', 'Other Algos', 'Ironfly'],
-                'Banknifty': ['My Algo', 'Other Algos', 'Ironfly'],
-                'Sensex': ['My Algo', 'Other Algos', 'Ironfly'],
-                'Equity': ['Cash', 'Swing', 'Intraday'],
-                'Commodity': ['Gold', 'Crude', 'Silver']
-            };
+            customStrategies = {};
 
             if (data.notes) {
                 for (let key in data.notes) {
                     if(key.startsWith('CHARGE_')) {
                         notesData[key] = data.notes[key];
                     } else if(key.startsWith('STRATS_')) {
-                        const inst = key.replace('STRATS_', '');
-                        customStrategies[inst] = data.notes[key].split('|||');
+                        const mapKey = key.replace('STRATS_', '');
+                        customStrategies[mapKey] = data.notes[key].split('|||');
                     } else {
                         notesData[normalizeDateStr(key)] = data.notes[key];
                     }
                 }
             }
-
-            // Auto-discover any old strategies to ensure they aren't lost
+            
+            // Auto-discover strategies from past trades so nothing gets orphaned
             trades.forEach(t => {
-                let inst = t.subCategory;
-                if(!inst || inst === '-') inst = 'Equity'; 
-                if(!customStrategies[inst]) customStrategies[inst] = [];
-                if(!customStrategies[inst].includes(t.category)) {
-                    customStrategies[inst].push(t.category);
+                const mapKey = `${t.instrument}|${t.tradeType}`;
+                if (!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
+                if (!customStrategies[mapKey].includes(t.strategy)) {
+                    customStrategies[mapKey].push(t.strategy);
                 }
             });
             
@@ -579,11 +592,14 @@
         const pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
 
+        // Pack Execution Type and Strategy into the 'category' field so backend is undisturbed
+        const packedCategory = `${selectedTradeType} | ${selectedStrategy}`;
+
         const newTrade = { 
             id: Date.now(), 
             date: date, 
-            category: selectedStrategy, // Strategy is the primary category
-            subCategory: selectedInstrument, // Instrument is the subCategory
+            category: packedCategory, 
+            subCategory: selectedInstrument, 
             pnl 
         };
 
@@ -625,28 +641,50 @@
         await syncWithSheet();
     }
 
+    // Dynamic Strategy Controls
     async function addNewStrategy() {
-        const newStrat = prompt(`Enter a new strategy name for ${selectedInstrument}:`);
+        const newStrat = prompt(`Enter a new strategy name for ${selectedInstrument} (${selectedTradeType}):`);
         if(!newStrat || newStrat.trim() === "") return;
         
         const cleanStrat = newStrat.trim();
-        if(!customStrategies[selectedInstrument]) customStrategies[selectedInstrument] = [];
-        if(customStrategies[selectedInstrument].includes(cleanStrat)) return alert("Strategy already exists!");
+        const mapKey = `${selectedInstrument}|${selectedTradeType}`;
         
-        customStrategies[selectedInstrument].push(cleanStrat);
+        if(!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
+        if(customStrategies[mapKey].includes(cleanStrat)) return alert("Strategy already exists!");
+        
+        customStrategies[mapKey].push(cleanStrat);
         selectedStrategy = cleanStrat; 
         
-        // Prepare payload, preserve existing CHARGE and STRATS data
         const updatedNotes = { ...notesData };
-        // We append the STRATS key onto the payload being sent
-        updatedNotes['STRATS_' + selectedInstrument] = customStrategies[selectedInstrument].join('|||');
+        updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
         
-        renderTradeLogUI(); // Optimistic local UI update
+        renderTradeLogUI(); 
         
         try {
             await apiPost('saveNotes', { notes: updatedNotes });
         } catch(e) {
             alert("Failed to sync new strategy to server.");
+        }
+    }
+
+    async function deleteActiveStrategy() {
+        if(confirm(`Are you sure you want to delete the strategy "${selectedStrategy}"?\n\nPast trades will keep their historical data, but this strategy will be removed from your menu.`)) {
+            const mapKey = `${selectedInstrument}|${selectedTradeType}`;
+            customStrategies[mapKey] = customStrategies[mapKey].filter(s => s !== selectedStrategy);
+            
+            selectedStrategy = customStrategies[mapKey][0] || 'Default';
+            
+            const updatedNotes = { ...notesData };
+            updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
+            
+            renderTradeLogUI();
+            
+            try {
+                await apiPost('saveNotes', { notes: updatedNotes });
+                await syncWithSheet();
+            } catch(e) {
+                alert("Failed to sync deletion to server.");
+            }
         }
     }
 
@@ -718,56 +756,69 @@
     // --- RENDER FUNCTIONS ---
 
     function renderTradeLogUI() {
-        // Render Instruments
+        // 1. Render Instruments
         const instContainer = document.getElementById('instrumentChips');
         instContainer.innerHTML = '';
-        const allInst = [...new Set([...DEFAULT_INSTRUMENTS, ...Object.keys(customStrategies)])];
-        
-        allInst.forEach(inst => {
+        INSTRUMENTS.forEach(inst => {
             const btn = document.createElement('button');
             btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`;
             btn.innerText = inst;
-            btn.onclick = () => { 
-                selectedInstrument = inst; 
-                renderTradeLogUI(); 
-            };
+            btn.onclick = () => { selectedInstrument = inst; renderTradeLogUI(); };
             instContainer.appendChild(btn);
         });
 
-        // Render Strategies based on selected Instrument
+        // 2. Render Execution Types
+        const typeContainer = document.getElementById('tradeTypeChips');
+        typeContainer.innerHTML = '';
+        TRADETYPES.forEach(type => {
+            const btn = document.createElement('button');
+            btn.className = `pill ${type === selectedTradeType ? 'active' : ''}`;
+            btn.innerText = type;
+            btn.onclick = () => { selectedTradeType = type; renderTradeLogUI(); };
+            typeContainer.appendChild(btn);
+        });
+
+        // 3. Render Strategies Dynamically
         const stratContainer = document.getElementById('strategyChips');
         stratContainer.innerHTML = '';
-        const strats = customStrategies[selectedInstrument] || [];
+        const mapKey = `${selectedInstrument}|${selectedTradeType}`;
         
-        if (strats.length > 0 && !strats.includes(selectedStrategy)) {
-            selectedStrategy = strats[0];
+        let strats = customStrategies[mapKey] || ['Default'];
+        if (!strats.includes(selectedStrategy)) {
+            selectedStrategy = strats[0] || 'Default';
         }
 
         strats.forEach(s => {
             const btn = document.createElement('button');
             btn.className = `pill ${s === selectedStrategy ? 'active' : ''}`;
             btn.innerText = s;
-            btn.onclick = () => { 
-                selectedStrategy = s; 
-                renderTradeLogUI(); 
-            };
+            btn.onclick = () => { selectedStrategy = s; renderTradeLogUI(); };
             stratContainer.appendChild(btn);
         });
 
-        // Add custom strategy button
+        // Add Custom Strategy Button
         const addBtn = document.createElement('button');
         addBtn.className = 'pill add-new';
         addBtn.innerText = '+ Add New';
         addBtn.onclick = addNewStrategy;
         stratContainer.appendChild(addBtn);
+
+        // Delete Strategy Button Visibility
+        const delBtn = document.getElementById('delStratBtn');
+        if (selectedStrategy === 'Default' || strats.length <= 1) {
+            delBtn.style.display = 'none';
+        } else {
+            delBtn.style.display = 'block';
+            delBtn.onclick = deleteActiveStrategy;
+        }
     }
 
     function renderDayWiseAlgo() {
         let dayTotals = [0, 0, 0, 0, 0]; // Mon to Fri
         
         trades.forEach(t => {
-            // Strictly limits Day Wise P/L to "My Algo" and "Other Algos" logic
-            if (t.category === 'My Algo' || t.category === 'Other Algos') {
+            // Strictly limits Day Wise P/L to Algo performance
+            if (t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
                     const d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -784,7 +835,7 @@
             const el = document.getElementById(`algo${d}`);
             const val = dayTotals[i];
             el.innerText = `₹${val.toLocaleString()}`;
-            // Adjust color based on profit/loss natively without overwriting classes
+            // Adjust color based on profit/loss natively
             if(val >= 0) { el.style.color = "var(--profit)"; }
             else { el.style.color = "var(--loss)"; }
         });
@@ -1082,10 +1133,11 @@
         let instBd = {};  // Instrument Breakdown
         
         sub.forEach(t => {
-            // Strategy is now in the t.category field
-            bd[t.category] = (bd[t.category]||0) + t.pnl;
-            // Instrument is now in the t.subCategory field
-            const instName = t.subCategory === '-' ? 'Unspecified' : t.subCategory;
+            // Isolates each distinct strategy dynamically
+            const stratName = t.tradeType === 'Manual' ? t.strategy : `${t.tradeType} (${t.strategy})`;
+            bd[stratName] = (bd[stratName]||0) + t.pnl;
+            
+            const instName = t.instrument;
             instBd[instName] = (instBd[instName]||0) + t.pnl;
         });
         
@@ -1133,8 +1185,7 @@
         if(i.length > 0) {
             h += '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 24px;">'; 
             i.forEach(t => {
-                // UI flips mapping logic. category = Strategy, subCategory = Instrument
-                let titleText = `${t.subCategory} — ${t.category}`;
+                let titleText = `${t.instrument} — ${t.tradeType} (${t.strategy})`;
                 h += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-app); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
                     <div style="font-weight:600; font-size:14px;">${titleText}</div>
