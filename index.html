@@ -198,6 +198,7 @@
         .btn-danger { border-color: rgba(244, 63, 94, 0.3); color: var(--loss); }
         .btn-danger:hover { background: var(--loss-glow); color: var(--loss); border-color: var(--loss); box-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
 
+        /* Toggle Switch Styles */
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-input); transition: .3s; border-radius: 22px; border: 1px solid var(--border-subtle); }
@@ -394,22 +395,40 @@
 
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
-                    <div>Other Charges & Fees</div>
+                    <div>Include Fees & Dividends in P/L</div>
                     <label class="switch">
                         <input type="checkbox" id="chargesToggle" onchange="toggleCharges()">
                         <span class="slider"></span>
                     </label>
                 </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Other Charges & Fees</div>
+                    <div style="display:flex; gap:12px; align-items:flex-end;">
+                        <div class="form-group" style="margin-bottom:0; flex:1;">
+                            <span class="form-label">Month</span>
+                            <input type="month" id="chargeMonth">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0; flex:1;">
+                            <span class="form-label">Amount (₹)</span>
+                            <input type="number" id="chargeInputAmount" placeholder="0.00" step="0.01">
+                        </div>
+                        <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--border-focus); color: var(--text-primary);" onclick="saveChargeEntry()">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ut-card">
+                <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:12px;">Dividends Received</div>
                 <div style="display:flex; gap:12px; align-items:flex-end;">
                     <div class="form-group" style="margin-bottom:0; flex:1;">
                         <span class="form-label">Month</span>
-                        <input type="month" id="chargeMonth">
+                        <input type="month" id="dividendMonth">
                     </div>
                     <div class="form-group" style="margin-bottom:0; flex:1;">
                         <span class="form-label">Amount (₹)</span>
-                        <input type="number" id="chargeInputAmount" placeholder="0.00" step="0.01">
+                        <input type="number" id="dividendInputAmount" placeholder="0.00" step="0.01">
                     </div>
-                    <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--border-focus); color: var(--text-primary);" onclick="saveChargeEntry()">Save</button>
+                    <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--profit); color: var(--profit);" onclick="saveDividendEntry()">Save</button>
                 </div>
             </div>
 
@@ -435,6 +454,11 @@
             <div class="ut-card">
                 <div class="ut-card-title">Daily P/L (Current Month)</div>
                 <div style="height: 220px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
+            </div>
+
+            <div class="ut-card">
+                <div class="ut-card-title">Monthly P/L</div>
+                <div style="height: 220px; width: 100%;"><canvas id="monthlyPnlChart"></canvas></div>
             </div>
 
         </div>
@@ -471,7 +495,7 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
 
     let curDate = new Date();
-    let chart1, chart2, gaugeWin, gaugePf;
+    let chart1, chart2, chart3, gaugeWin, gaugePf;
     const tooltip = document.getElementById('iosTooltip');
 
     document.getElementById('dateInput').valueAsDate = curDate;
@@ -533,13 +557,11 @@
                 let strategy = t.category;
                 let instrument = t.subCategory && t.subCategory !== '-' ? t.subCategory : 'Unspecified';
 
-                // Check if this is a new "packed" category string
                 if (t.category && t.category.includes(' | ')) {
                     const parts = t.category.split(' | ');
                     tradeType = parts[0];
                     strategy = parts[1];
                 } else {
-                    // Fallback for legacy trades before the 3-tier update
                     if (t.category === 'My Algo' || t.category === 'Other Algos' || t.category === 'Tez Algo') {
                         tradeType = t.category === 'Tez Algo' ? 'Other Algos' : t.category;
                         strategy = 'Default';
@@ -556,7 +578,7 @@
 
             if (data.notes) {
                 for (let key in data.notes) {
-                    if(key.startsWith('CHARGE_')) {
+                    if(key.startsWith('CHARGE_') || key.startsWith('DIVIDEND_')) {
                         notesData[key] = data.notes[key];
                     } else if(key.startsWith('STRATS_')) {
                         const mapKey = key.replace('STRATS_', '');
@@ -567,7 +589,7 @@
                 }
             }
             
-            // Auto-discover strategies from past trades so nothing gets orphaned
+            // Auto-discover strategies from past trades
             trades.forEach(t => {
                 const mapKey = `${t.instrument}|${t.tradeType}`;
                 if (!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
@@ -592,7 +614,7 @@
         const pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
 
-        // Pack Execution Type and Strategy into the 'category' field so backend is undisturbed
+        // Pack Execution Type and Strategy into the 'category' field
         const packedCategory = `${selectedTradeType} | ${selectedStrategy}`;
 
         const newTrade = { 
@@ -635,6 +657,22 @@
             delete updatedNotes['CHARGE_' + ym];
         } else {
             updatedNotes['CHARGE_' + ym] = parseFloat(amt);
+        }
+        
+        await apiPost('saveNotes', { notes: updatedNotes });
+        await syncWithSheet();
+    }
+
+    async function saveDividendEntry() {
+        const ym = document.getElementById('dividendMonth').value;
+        const amt = document.getElementById('dividendInputAmount').value;
+        if(!ym) return;
+        
+        const updatedNotes = { ...notesData };
+        if(amt === "" || isNaN(amt)) {
+            delete updatedNotes['DIVIDEND_' + ym];
+        } else {
+            updatedNotes['DIVIDEND_' + ym] = parseFloat(amt);
         }
         
         await apiPost('saveNotes', { notes: updatedNotes });
@@ -730,21 +768,29 @@
         updateUI(); 
     }
 
-    function updateChargeUI() {
+    function updateMonthlyInputsUI() {
         document.getElementById('chargesToggle').checked = isChargesOn;
         const y = curDate.getFullYear();
         const m = String(curDate.getMonth() + 1).padStart(2, '0');
         const ym = `${y}-${m}`;
+        
         document.getElementById('chargeMonth').value = ym;
         document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + ym] || '';
+        
+        document.getElementById('dividendMonth').value = ym;
+        document.getElementById('dividendInputAmount').value = notesData['DIVIDEND_' + ym] || '';
     }
 
     document.getElementById('chargeMonth').addEventListener('change', (e) => {
         document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + e.target.value] || '';
     });
+    
+    document.getElementById('dividendMonth').addEventListener('change', (e) => {
+        document.getElementById('dividendInputAmount').value = notesData['DIVIDEND_' + e.target.value] || '';
+    });
 
     function updateUI() { 
-        updateChargeUI();
+        updateMonthlyInputsUI();
         renderTradeLogUI();
         renderDayWiseAlgo();
         renderTelemetry(); 
@@ -756,7 +802,6 @@
     // --- RENDER FUNCTIONS ---
 
     function renderTradeLogUI() {
-        // 1. Render Instruments
         const instContainer = document.getElementById('instrumentChips');
         instContainer.innerHTML = '';
         INSTRUMENTS.forEach(inst => {
@@ -767,7 +812,6 @@
             instContainer.appendChild(btn);
         });
 
-        // 2. Render Execution Types
         const typeContainer = document.getElementById('tradeTypeChips');
         typeContainer.innerHTML = '';
         TRADETYPES.forEach(type => {
@@ -778,7 +822,6 @@
             typeContainer.appendChild(btn);
         });
 
-        // 3. Render Strategies Dynamically
         const stratContainer = document.getElementById('strategyChips');
         stratContainer.innerHTML = '';
         const mapKey = `${selectedInstrument}|${selectedTradeType}`;
@@ -796,14 +839,12 @@
             stratContainer.appendChild(btn);
         });
 
-        // Add Custom Strategy Button
         const addBtn = document.createElement('button');
         addBtn.className = 'pill add-new';
         addBtn.innerText = '+ Add New';
         addBtn.onclick = addNewStrategy;
         stratContainer.appendChild(addBtn);
 
-        // Delete Strategy Button Visibility
         const delBtn = document.getElementById('delStratBtn');
         if (selectedStrategy === 'Default' || strats.length <= 1) {
             delBtn.style.display = 'none';
@@ -814,15 +855,14 @@
     }
 
     function renderDayWiseAlgo() {
-        let dayTotals = [0, 0, 0, 0, 0]; // Mon to Fri
+        let dayTotals = [0, 0, 0, 0, 0]; 
         
         trades.forEach(t => {
-            // Strictly limits Day Wise P/L to Algo performance
             if (t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
                     const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    const dayOfWeek = d.getDay(); // 0 is Sunday, 1 is Monday
+                    const dayOfWeek = d.getDay(); 
                     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                         dayTotals[dayOfWeek - 1] += t.pnl;
                     }
@@ -835,7 +875,6 @@
             const el = document.getElementById(`algo${d}`);
             const val = dayTotals[i];
             el.innerText = `₹${val.toLocaleString()}`;
-            // Adjust color based on profit/loss natively
             if(val >= 0) { el.style.color = "var(--profit)"; }
             else { el.style.color = "var(--loss)"; }
         });
@@ -862,19 +901,21 @@
         
         const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
         let totalCharges = 0;
+        let totalDividends = 0;
+        
         if(isChargesOn) {
             for(let k in notesData) {
                 if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0;
+                if(k.startsWith('DIVIDEND_')) totalDividends += parseFloat(notesData[k]) || 0;
             }
         }
-        const displayPnl = grossPnl - totalCharges;
+        const displayPnl = grossPnl - totalCharges + totalDividends;
 
         const pnlEl = document.getElementById('statTotalPnl');
         pnlEl.innerText = `₹${displayPnl.toLocaleString()}`;
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = isChargesOn ? "Net Profit / Loss" : "Gross Profit / Loss";
         
-        // Averages remain tied to trade execution metrics (Gross)
         const avgTrade = grossPnl / trades.length;
         const wins = trades.filter(t => t.pnl > 0);
         const losses = trades.filter(t => t.pnl <= 0);
@@ -883,7 +924,6 @@
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
 
-        // Drawdown Fix: Aggregate trades day-by-day first
         const dailyTradePnL = {};
         trades.forEach(t => {
             dailyTradePnL[t.date] = (dailyTradePnL[t.date] || 0) + t.pnl;
@@ -997,7 +1037,7 @@
             } 
         });
 
-        // --- 2. Monthly Daily P/L Bar Chart ---
+        // --- 2. Monthly Daily P/L Bar Chart (Current Calendar Month) ---
         const y = curDate.getFullYear();
         const m = curDate.getMonth();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -1033,6 +1073,64 @@
                     x: { 
                         grid: { display: false },
                         ticks: { color: '#71717a', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: '#1f1f22', tickLength: 0 },
+                        border: { display: false }
+                    }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
+        });
+
+        // --- 3. Monthly P/L Aggregate Chart (Chronological) ---
+        const monthlyAggMap = {};
+        
+        trades.forEach(t => {
+            const ym = t.date.substring(0, 7);
+            monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + t.pnl;
+        });
+
+        if(isChargesOn) {
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) {
+                    const ym = k.replace('CHARGE_', '');
+                    monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0);
+                }
+                if(k.startsWith('DIVIDEND_')) {
+                    const ym = k.replace('DIVIDEND_', '');
+                    monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + (parseFloat(notesData[k]) || 0);
+                }
+            }
+        }
+
+        const sortedAggMonths = Object.keys(monthlyAggMap).sort();
+        const aggMonthLabels = sortedAggMonths.map(ym => {
+            const d = new Date(ym + '-01');
+            return d.toLocaleString('default', { month: 'short', year: '2-digit' }); 
+        });
+        const aggMonthData = sortedAggMonths.map(ym => monthlyAggMap[ym]);
+
+        const ctx3 = document.getElementById('monthlyPnlChart').getContext('2d');
+        if(chart3) chart3.destroy();
+        chart3 = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: aggMonthLabels,
+                datasets: [{
+                    label: 'Monthly Net P/L',
+                    data: aggMonthData,
+                    backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#a1a1aa', font: { size: 11, weight: '600' } }
                     },
                     y: {
                         grid: { color: '#1f1f22', tickLength: 0 },
@@ -1129,11 +1227,10 @@
         const sub = trades.filter(t => t.date >= s && t.date <= e); 
         let tot = sub.reduce((a,b)=>a+b.pnl,0);
         
-        let bd = {};      // Strategy Breakdown
-        let instBd = {};  // Instrument Breakdown
+        let bd = {};      
+        let instBd = {};  
         
         sub.forEach(t => {
-            // Isolates each distinct strategy dynamically
             const stratName = t.tradeType === 'Manual' ? t.strategy : `${t.tradeType} (${t.strategy})`;
             bd[stratName] = (bd[stratName]||0) + t.pnl;
             
@@ -1145,10 +1242,16 @@
             const startM = s.substring(0, 7);
             const endM = e.substring(0, 7);
             let reportCharges = 0;
+            let reportDividends = 0;
+            
             for(let k in notesData) {
                 if(k.startsWith('CHARGE_')) {
                     const m = k.replace('CHARGE_', '');
                     if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]);
+                }
+                if(k.startsWith('DIVIDEND_')) {
+                    const m = k.replace('DIVIDEND_', '');
+                    if(m >= startM && m <= endM) reportDividends += parseFloat(notesData[k]);
                 }
             }
             if(reportCharges > 0) {
@@ -1156,20 +1259,23 @@
                 bd['Other Charges & Fees'] = -reportCharges; 
                 instBd['Other Charges & Fees'] = -reportCharges;
             }
+            if(reportDividends > 0) {
+                tot += reportDividends;
+                bd['Dividends Received'] = reportDividends; 
+                instBd['Dividends Received'] = reportDividends;
+            }
         }
 
         const totEl = document.getElementById('repTotal');
         totEl.innerText = `₹${tot.toLocaleString()}`; 
         totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
-        // Render Strategy Breakdown
         let h = ''; 
         for(let k in bd) {
              h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
         }
         document.getElementById('repBreakdown').innerHTML = h; 
 
-        // Render Instrument Breakdown
         let hInst = '';
         for(let k in instBd) {
              hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
