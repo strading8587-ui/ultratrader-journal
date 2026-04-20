@@ -436,7 +436,7 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Performance Telemetry</div>
+                <div class="ut-card-title">Performance Telemetry (Nifty / Banknifty / Sensex)</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTrade">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWin">₹0</div></div>
@@ -446,6 +446,20 @@
                     <div class="stat-item"><div class="lbl">Max Drawdown</div><div class="val text-loss" id="statMaxDD">₹0</div></div>
                     <div class="stat-item"><div class="lbl">DD Duration</div><div class="val" id="statDDDuration">0d</div></div>
                     <div class="stat-item"><div class="lbl">Total Trades</div><div class="val" id="statTradeCount">0</div></div>
+                </div>
+            </div>
+
+            <div class="ut-card">
+                <div class="ut-card-title">Equity Performance Telemetry</div>
+                <div class="stats-grid">
+                    <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTradeEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWinEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Avg Loss</div><div class="val text-loss" id="statAvgLossEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Best Trade</div><div class="val text-profit" id="statMaxWinEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Worst Trade</div><div class="val text-loss" id="statMaxLossEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Max Drawdown</div><div class="val text-loss" id="statMaxDDEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">DD Duration</div><div class="val" id="statDDDurationEq">0d</div></div>
+                    <div class="stat-item"><div class="lbl">Total Trades</div><div class="val" id="statTradeCountEq">0</div></div>
                 </div>
             </div>
 
@@ -897,20 +911,10 @@
         if(trades.length === 0) {
             document.getElementById('statTotalPnl').innerText = "₹0";
             document.getElementById('statTotalPnl').className = "metric-value";
-            
-            document.getElementById('statAvgTrade').innerText = "₹0";
-            document.getElementById('statAvgWin').innerText = "₹0";
-            document.getElementById('statAvgLoss').innerText = "₹0";
-            document.getElementById('statMaxWin').innerText = "₹0";
-            document.getElementById('statMaxLoss').innerText = "₹0";
-            document.getElementById('statMaxDD').innerText = "₹0";
-            
-            document.getElementById('statDDDuration').innerText = "0d";
-            document.getElementById('statTradeCount').innerText = "0";
+            updateTelemetryGrid([], '');
+            updateTelemetryGrid([], 'Eq');
             return;
         }
-        
-        document.getElementById('statTradeCount').innerText = trades.length;
         
         const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
         let totalCharges = 0;
@@ -939,16 +943,37 @@
             document.getElementById('pnlLabel').innerText = "Gross Profit / Loss";
         }
         
-        const avgTrade = grossPnl / trades.length;
-        const wins = trades.filter(t => t.pnl > 0);
-        const losses = trades.filter(t => t.pnl <= 0);
+        const indexTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
+        updateTelemetryGrid(indexTrades, '');
+
+        const equityTrades = trades.filter(t => t.instrument === 'Equity');
+        updateTelemetryGrid(equityTrades, 'Eq');
+    }
+
+    function updateTelemetryGrid(tradeList, suffix) {
+        if(tradeList.length === 0) {
+            document.getElementById('statAvgTrade' + suffix).innerText = "₹0";
+            document.getElementById('statAvgWin' + suffix).innerText = "₹0";
+            document.getElementById('statAvgLoss' + suffix).innerText = "₹0";
+            document.getElementById('statMaxWin' + suffix).innerText = "₹0";
+            document.getElementById('statMaxLoss' + suffix).innerText = "₹0";
+            document.getElementById('statMaxDD' + suffix).innerText = "₹0";
+            document.getElementById('statDDDuration' + suffix).innerText = "0d";
+            document.getElementById('statTradeCount' + suffix).innerText = "0";
+            return;
+        }
+
+        const grossPnl = tradeList.reduce((a,b) => a + b.pnl, 0);
+        const avgTrade = grossPnl / tradeList.length;
+        const wins = tradeList.filter(t => t.pnl > 0);
+        const losses = tradeList.filter(t => t.pnl <= 0);
         const avgWin = wins.length ? wins.reduce((a,b)=>a+b.pnl,0)/wins.length : 0;
         const avgLoss = losses.length ? losses.reduce((a,b)=>a+b.pnl,0)/losses.length : 0;
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
 
         const dailyTradePnL = {};
-        trades.forEach(t => {
+        tradeList.forEach(t => {
             dailyTradePnL[t.date] = (dailyTradePnL[t.date] || 0) + t.pnl;
         });
 
@@ -966,13 +991,14 @@
         let durationDays = 0;
         if(maxDD_StartDate && maxDD_EndDate) durationDays = Math.ceil(Math.abs(maxDD_EndDate - maxDD_StartDate) / (1000 * 60 * 60 * 24));
 
-        document.getElementById('statAvgTrade').innerText = `₹${avgTrade.toFixed(0)}`;
-        document.getElementById('statAvgWin').innerText = `₹${avgWin.toFixed(0)}`;
-        document.getElementById('statAvgLoss').innerText = `₹${avgLoss.toFixed(0)}`;
-        document.getElementById('statMaxWin').innerText = `₹${maxWin.toLocaleString()}`;
-        document.getElementById('statMaxLoss').innerText = `₹${maxLoss.toLocaleString()}`;
-        document.getElementById('statMaxDD').innerText = `₹${maxDD.toLocaleString()}`;
-        document.getElementById('statDDDuration').innerText = `${durationDays}d`;
+        document.getElementById('statAvgTrade' + suffix).innerText = `₹${avgTrade.toFixed(0)}`;
+        document.getElementById('statAvgWin' + suffix).innerText = `₹${avgWin.toFixed(0)}`;
+        document.getElementById('statAvgLoss' + suffix).innerText = `₹${avgLoss.toFixed(0)}`;
+        document.getElementById('statMaxWin' + suffix).innerText = `₹${maxWin.toLocaleString()}`;
+        document.getElementById('statMaxLoss' + suffix).innerText = `₹${maxLoss.toLocaleString()}`;
+        document.getElementById('statMaxDD' + suffix).innerText = `₹${maxDD.toLocaleString()}`;
+        document.getElementById('statDDDuration' + suffix).innerText = `${durationDays}d`;
+        document.getElementById('statTradeCount' + suffix).innerText = tradeList.length;
     }
 
     function renderGauges() {
