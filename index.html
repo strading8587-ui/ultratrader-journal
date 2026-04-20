@@ -272,7 +272,12 @@
         <div class="metric-widget">
             <div class="metric-info">
                 <div class="metric-label" id="pnlLabel">Gross Profit / Loss</div>
-                <div class="metric-value" id="statTotalPnl">₹0</div>
+                <div class="metric-value" id="statTotalPnl" style="margin-bottom: 6px;">₹0</div>
+                
+                <div style="display: flex; gap: 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);">
+                    <div style="background: var(--bg-app); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">F&O: <span id="statFnoPnl">₹0</span></div>
+                    <div style="background: var(--bg-app); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-subtle);">EQ: <span id="statEqPnl">₹0</span></div>
+                </div>
             </div>
         </div>
         
@@ -911,6 +916,8 @@
         if(trades.length === 0) {
             document.getElementById('statTotalPnl').innerText = "₹0";
             document.getElementById('statTotalPnl').className = "metric-value";
+            document.getElementById('statFnoPnl').innerText = "₹0";
+            document.getElementById('statEqPnl').innerText = "₹0";
             updateTelemetryGrid([], '');
             updateTelemetryGrid([], 'Eq');
             return;
@@ -943,11 +950,24 @@
             document.getElementById('pnlLabel').innerText = "Gross Profit / Loss";
         }
         
-        const indexTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
-        updateTelemetryGrid(indexTrades, '');
+        // Setup separate raw gross PnL for F&O and Equity tags
+        const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
+        const eqTrades = trades.filter(t => t.instrument === 'Equity');
 
-        const equityTrades = trades.filter(t => t.instrument === 'Equity');
-        updateTelemetryGrid(equityTrades, 'Eq');
+        const fnoPnl = fnoTrades.reduce((sum, t) => sum + t.pnl, 0);
+        const eqPnl = eqTrades.reduce((sum, t) => sum + t.pnl, 0);
+
+        const fnoEl = document.getElementById('statFnoPnl');
+        fnoEl.innerText = `₹${fnoPnl.toLocaleString()}`;
+        fnoEl.className = fnoPnl >= 0 ? 'text-profit' : 'text-loss';
+
+        const eqEl = document.getElementById('statEqPnl');
+        eqEl.innerText = `₹${eqPnl.toLocaleString()}`;
+        eqEl.className = eqPnl >= 0 ? 'text-profit' : 'text-loss';
+
+        // Update the distinct telemetry grids
+        updateTelemetryGrid(fnoTrades, '');
+        updateTelemetryGrid(eqTrades, 'Eq');
     }
 
     function updateTelemetryGrid(tradeList, suffix) {
