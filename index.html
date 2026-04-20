@@ -395,30 +395,33 @@
 
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
-                    <div>Include Fees & Dividends in P/L</div>
+                    <div>Other Charges & Fees</div>
                     <label class="switch">
                         <input type="checkbox" id="chargesToggle" onchange="toggleCharges()">
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Other Charges & Fees</div>
-                    <div style="display:flex; gap:12px; align-items:flex-end;">
-                        <div class="form-group" style="margin-bottom:0; flex:1;">
-                            <span class="form-label">Month</span>
-                            <input type="month" id="chargeMonth">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0; flex:1;">
-                            <span class="form-label">Amount (₹)</span>
-                            <input type="number" id="chargeInputAmount" placeholder="0.00" step="0.01">
-                        </div>
-                        <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--border-focus); color: var(--text-primary);" onclick="saveChargeEntry()">Save</button>
+                <div style="display:flex; gap:12px; align-items:flex-end;">
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <span class="form-label">Month</span>
+                        <input type="month" id="chargeMonth">
                     </div>
+                    <div class="form-group" style="margin-bottom:0; flex:1;">
+                        <span class="form-label">Amount (₹)</span>
+                        <input type="number" id="chargeInputAmount" placeholder="0.00" step="0.01">
+                    </div>
+                    <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--border-focus); color: var(--text-primary);" onclick="saveChargeEntry()">Save</button>
                 </div>
             </div>
 
             <div class="ut-card">
-                <div style="font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:12px;">Dividends Received</div>
+                <div class="ut-card-title" style="margin-bottom: 16px;">
+                    <div>Dividends Received</div>
+                    <label class="switch">
+                        <input type="checkbox" id="dividendsToggle" onchange="toggleDividends()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div style="display:flex; gap:12px; align-items:flex-end;">
                     <div class="form-group" style="margin-bottom:0; flex:1;">
                         <span class="form-label">Month</span>
@@ -481,7 +484,10 @@
     // These variables act ONLY as a read-only mirror of your Google Sheet.
     let trades = [];
     let notesData = {};
+    
+    // Separate states for Charges and Dividends
     let isChargesOn = false;
+    let isDividendsOn = false;
     
     // UI State for dynamic strategy picker
     const INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
@@ -767,9 +773,16 @@
         isChargesOn = document.getElementById('chargesToggle').checked; 
         updateUI(); 
     }
+    
+    function toggleDividends() {
+        isDividendsOn = document.getElementById('dividendsToggle').checked;
+        updateUI();
+    }
 
     function updateMonthlyInputsUI() {
         document.getElementById('chargesToggle').checked = isChargesOn;
+        document.getElementById('dividendsToggle').checked = isDividendsOn;
+        
         const y = curDate.getFullYear();
         const m = String(curDate.getMonth() + 1).padStart(2, '0');
         const ym = `${y}-${m}`;
@@ -906,15 +919,25 @@
         if(isChargesOn) {
             for(let k in notesData) {
                 if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0;
+            }
+        }
+        if(isDividendsOn) {
+            for(let k in notesData) {
                 if(k.startsWith('DIVIDEND_')) totalDividends += parseFloat(notesData[k]) || 0;
             }
         }
+        
         const displayPnl = grossPnl - totalCharges + totalDividends;
 
         const pnlEl = document.getElementById('statTotalPnl');
         pnlEl.innerText = `₹${displayPnl.toLocaleString()}`;
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
-        document.getElementById('pnlLabel').innerText = isChargesOn ? "Net Profit / Loss" : "Gross Profit / Loss";
+        
+        if (isChargesOn || isDividendsOn) {
+            document.getElementById('pnlLabel').innerText = "Net Profit / Loss";
+        } else {
+            document.getElementById('pnlLabel').innerText = "Gross Profit / Loss";
+        }
         
         const avgTrade = grossPnl / trades.length;
         const wins = trades.filter(t => t.pnl > 0);
@@ -1097,6 +1120,10 @@
                     const ym = k.replace('CHARGE_', '');
                     monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0);
                 }
+            }
+        }
+        if(isDividendsOn) {
+            for(let k in notesData) {
                 if(k.startsWith('DIVIDEND_')) {
                     const ym = k.replace('DIVIDEND_', '');
                     monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + (parseFloat(notesData[k]) || 0);
@@ -1238,26 +1265,31 @@
             instBd[instName] = (instBd[instName]||0) + t.pnl;
         });
         
+        const startM = s.substring(0, 7);
+        const endM = e.substring(0, 7);
+        
         if(isChargesOn) {
-            const startM = s.substring(0, 7);
-            const endM = e.substring(0, 7);
             let reportCharges = 0;
-            let reportDividends = 0;
-            
             for(let k in notesData) {
                 if(k.startsWith('CHARGE_')) {
                     const m = k.replace('CHARGE_', '');
                     if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]);
-                }
-                if(k.startsWith('DIVIDEND_')) {
-                    const m = k.replace('DIVIDEND_', '');
-                    if(m >= startM && m <= endM) reportDividends += parseFloat(notesData[k]);
                 }
             }
             if(reportCharges > 0) {
                 tot -= reportCharges;
                 bd['Other Charges & Fees'] = -reportCharges; 
                 instBd['Other Charges & Fees'] = -reportCharges;
+            }
+        }
+        
+        if(isDividendsOn) {
+            let reportDividends = 0;
+            for(let k in notesData) {
+                if(k.startsWith('DIVIDEND_')) {
+                    const m = k.replace('DIVIDEND_', '');
+                    if(m >= startM && m <= endM) reportDividends += parseFloat(notesData[k]);
+                }
             }
             if(reportDividends > 0) {
                 tot += reportDividends;
@@ -1270,12 +1302,14 @@
         totEl.innerText = `₹${tot.toLocaleString()}`; 
         totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
+        // Render Strategy Breakdown
         let h = ''; 
         for(let k in bd) {
              h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
         }
         document.getElementById('repBreakdown').innerHTML = h; 
 
+        // Render Instrument Breakdown
         let hInst = '';
         for(let k in instBd) {
              hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
