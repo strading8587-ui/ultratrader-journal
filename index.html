@@ -840,7 +840,14 @@
             const btn = document.createElement('button');
             btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`;
             btn.innerText = inst;
-            btn.onclick = () => { selectedInstrument = inst; renderTradeLogUI(); };
+            btn.onclick = () => { 
+                selectedInstrument = inst; 
+                // Automatically set Execution Type to Manual if Equity or Commodity is clicked
+                if (inst === 'Equity' || inst === 'Commodity') {
+                    selectedTradeType = 'Manual';
+                }
+                renderTradeLogUI(); 
+            };
             instContainer.appendChild(btn);
         });
 
@@ -890,7 +897,8 @@
         let dayTotals = [0, 0, 0, 0, 0]; 
         
         trades.forEach(t => {
-            if (t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') {
+            // Strictly limits Day Wise P/L to F&O Algos
+            if ((t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') && ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument)) {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
                     const d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -950,7 +958,6 @@
             document.getElementById('pnlLabel').innerText = "Gross Profit / Loss";
         }
         
-        // Setup separate raw gross PnL for F&O and Equity tags
         const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
         const eqTrades = trades.filter(t => t.instrument === 'Equity');
 
@@ -965,7 +972,6 @@
         eqEl.innerText = `₹${eqPnl.toLocaleString()}`;
         eqEl.className = eqPnl >= 0 ? 'text-profit' : 'text-loss';
 
-        // Update the distinct telemetry grids
         updateTelemetryGrid(fnoTrades, '');
         updateTelemetryGrid(eqTrades, 'Eq');
     }
