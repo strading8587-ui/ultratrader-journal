@@ -842,6 +842,10 @@
             btn.innerText = inst;
             btn.onclick = () => { 
                 selectedInstrument = inst; 
+                // Automatically set Execution Type to Manual if Equity or Commodity is clicked
+                if (inst === 'Equity' || inst === 'Commodity') {
+                    selectedTradeType = 'Manual';
+                }
                 renderTradeLogUI(); 
             };
             instContainer.appendChild(btn);
@@ -1308,6 +1312,7 @@
         const s = document.getElementById('repStart').value; 
         const e = document.getElementById('repEnd').value; 
         if(!s || !e) return;
+        
         const sub = trades.filter(t => t.date >= s && t.date <= e); 
         let tot = sub.reduce((a,b)=>a+b.pnl,0);
         
@@ -1315,58 +1320,30 @@
         let instBd = {};  
         
         sub.forEach(t => {
-            const stratName = t.tradeType === 'Manual' ? t.strategy : `${t.tradeType} (${t.strategy})`;
+            let stratName = '';
+            if (t.tradeType === 'Manual') {
+                stratName = t.strategy === 'Default' ? `${t.instrument} (Base)` : `${t.instrument} (${t.strategy})`;
+            } else {
+                stratName = `${t.instrument} (${t.tradeType} - ${t.strategy})`;
+            }
+            
             bd[stratName] = (bd[stratName]||0) + t.pnl;
             
             const instName = t.instrument;
             instBd[instName] = (instBd[instName]||0) + t.pnl;
         });
-        
-        const startM = s.substring(0, 7);
-        const endM = e.substring(0, 7);
-        
-        if(isChargesOn) {
-            let reportCharges = 0;
-            for(let k in notesData) {
-                if(k.startsWith('CHARGE_')) {
-                    const m = k.replace('CHARGE_', '');
-                    if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]);
-                }
-            }
-            if(reportCharges > 0) {
-                tot -= reportCharges;
-                bd['Other Charges & Fees'] = -reportCharges; 
-                instBd['Other Charges & Fees'] = -reportCharges;
-            }
-        }
-        
-        if(isDividendsOn) {
-            let reportDividends = 0;
-            for(let k in notesData) {
-                if(k.startsWith('DIVIDEND_')) {
-                    const m = k.replace('DIVIDEND_', '');
-                    if(m >= startM && m <= endM) reportDividends += parseFloat(notesData[k]);
-                }
-            }
-            if(reportDividends > 0) {
-                tot += reportDividends;
-                bd['Dividends Received'] = reportDividends; 
-                instBd['Dividends Received'] = reportDividends;
-            }
-        }
 
         const totEl = document.getElementById('repTotal');
         totEl.innerText = `₹${tot.toLocaleString()}`; 
         totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
-        // Render Strategy Breakdown
         let h = ''; 
         for(let k in bd) {
              h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
         }
+        if(Object.keys(bd).length === 0) h = '<div style="color:var(--text-muted); font-size:13px;">No trades in this period.</div>';
         document.getElementById('repBreakdown').innerHTML = h; 
 
-        // Render Instrument Breakdown
         let hInst = '';
         for(let k in instBd) {
              hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
