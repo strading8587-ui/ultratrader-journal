@@ -17,7 +17,7 @@
         :root {
             --bg-base: #000000;
             --bg-app: #09090b;
-            --bg-card: rgba(20, 20, 21, 0.6); /* Translucent base for Glassmorphism */
+            --bg-card: rgba(20, 20, 21, 0.6); 
             --bg-input: rgba(31, 31, 34, 0.7);
             --bg-hover: rgba(39, 39, 42, 0.8);
             
@@ -37,7 +37,7 @@
             --text-muted: #71717a;
             
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace; /* Terminal Font */
+            --font-mono: 'JetBrains Mono', monospace;
             
             --radius-sm: 8px;
             --radius-md: 14px;
@@ -50,7 +50,6 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
 
-        /* Stealth Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
@@ -59,7 +58,6 @@
         body {
             font-family: var(--font-sans);
             background-color: var(--bg-base);
-            /* Base ambient lighting (overwritten by JS based on PNL) */
             background-image: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%);
             background-attachment: fixed;
             color: var(--text-primary);
@@ -69,92 +67,43 @@
             transition: background-image 1s ease;
         }
 
-        .app-header {
-            max-width: 1400px;
-            margin: 0 auto 30px auto;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        
-        .app-title {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-            color: #0050B3; 
-            transition: text-shadow 0.3s ease;
-        }
-        .app-title:hover {
-            text-shadow: 0 0 15px rgba(0, 80, 179, 0.6);
-        }
+        .app-header { max-width: 1400px; margin: 0 auto 30px auto; display: flex; align-items: center; gap: 14px; }
+        .app-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; color: #0050B3; transition: text-shadow 0.3s ease; }
+        .app-title:hover { text-shadow: 0 0 15px rgba(0, 80, 179, 0.6); }
 
         .container { max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
 
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 24px; 
-        }
-        @media (min-width: 1024px) { 
-            .dashboard-grid { grid-template-columns: 380px 1fr; align-items: start; } 
-        }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 380px 1fr; align-items: start; } }
 
-        /* Glassmorphism Cards */
         .ut-card {
             background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: var(--shadow-card);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+            padding: 24px; box-shadow: var(--shadow-card); position: relative;
+            overflow: hidden; transition: all 0.3s ease;
         }
-        .ut-card:hover {
-            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
-            transform: translateY(-2px);
-            border-color: rgba(139, 92, 246, 0.3);
-        }
+        .ut-card:hover { box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15); transform: translateY(-2px); border-color: rgba(139, 92, 246, 0.3); }
 
         .ut-card-title {
             font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            text-transform: uppercase;
+            display: flex; justify-content: space-between; align-items: center; text-transform: uppercase;
         }
 
-        .metrics-row { 
-            display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; 
-        }
+        .metrics-row { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
         @media (min-width: 768px) { .metrics-row { grid-template-columns: repeat(3, 1fr); } }
 
-        /* Glassmorphism Widgets */
         .metric-widget {
-            background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
+            background: var(--bg-card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
             padding: 20px; display: flex; align-items: center; gap: 20px;
-            box-shadow: var(--shadow-card);
-            transition: all 0.3s ease;
+            box-shadow: var(--shadow-card); transition: all 0.3s ease;
         }
-        .metric-widget:hover {
-            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
-            transform: translateY(-2px);
-            border-color: rgba(139, 92, 246, 0.4);
-        }
+        .metric-widget:hover { box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2); transform: translateY(-2px); border-color: rgba(139, 92, 246, 0.4); }
 
         .metric-info { flex: 1; }
         .metric-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-        
-        /* Terminal Monospace applied to Key Numbers */
-        .metric-value { 
-            font-family: var(--font-mono);
-            font-size: 28px; font-weight: 700; letter-spacing: -1px; line-height: 1; 
-        }
+        .metric-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
         
         .gauge-mini-wrap { width: 70px; height: 70px; position: relative; }
 
@@ -162,17 +111,12 @@
         @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         
         .stat-item { 
-            background: rgba(0,0,0,0.4); 
-            border-radius: var(--radius-md); padding: 16px;
+            background: rgba(0,0,0,0.4); border-radius: var(--radius-md); padding: 16px;
             border: 1px solid var(--border-subtle); transition: all 0.3s ease;
         }
-        .stat-item:hover { 
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); 
-            border-color: var(--brand-solid); 
-            background: var(--bg-hover);
-        }
+        .stat-item:hover { box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); border-color: var(--brand-solid); background: var(--bg-hover); }
         .stat-item .lbl { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-        .stat-item .val { font-family: var(--font-mono); font-size: 17px; font-weight: 600; letter-spacing: -0.5px; }
+        .stat-item .val { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: -0.5px; }
 
         .text-profit { color: var(--profit) !important; }
         .text-loss { color: var(--loss) !important; }
@@ -193,8 +137,7 @@
         .pill-group:hover { border-color: rgba(139, 92, 246, 0.3); box-shadow: 0 0 15px rgba(139, 92, 246, 0.05); }
         .pill {
             flex: 1; min-width: 80px; text-align: center; padding: 10px 14px; background: transparent; border: none; color: var(--text-secondary);
-            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border-radius: var(--radius-md);
-            font-family: var(--font-sans);
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border-radius: var(--radius-md); font-family: var(--font-sans);
         }
         .pill:hover { color: var(--text-primary); text-shadow: 0 0 8px rgba(255,255,255,0.3); }
         .pill.active { background: rgba(255,255,255,0.1); color: var(--text-primary); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); border: 1px solid var(--border-subtle); }
@@ -205,24 +148,20 @@
         .del-btn:hover { text-shadow: 0 0 10px var(--loss); transform: scale(1.05); }
 
         .btn-gradient {
-            width: 100%; padding: 16px; background: var(--brand-gradient);
-            border: none; border-radius: var(--radius-md); color: #fff; font-family: var(--font-sans); 
-            font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: var(--shadow-glow); margin-top: 10px;
+            width: 100%; padding: 16px; background: var(--brand-gradient); border: none; border-radius: var(--radius-md); color: #fff; font-family: var(--font-sans); 
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-glow); margin-top: 10px;
         }
         .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(139, 92, 246, 0.6); opacity: 1; }
         .btn-gradient:active { transform: translateY(1px); box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
 
         .btn-ghost { 
             background: transparent; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); 
-            padding: 8px 14px; color: var(--text-secondary); font-size: 12px; font-weight: 500; 
-            cursor: pointer; transition: all 0.3s ease; font-family: var(--font-sans); 
+            padding: 8px 14px; color: var(--text-secondary); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: var(--font-sans); 
         }
         .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); box-shadow: 0 0 10px rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
         .btn-danger { border-color: rgba(244, 63, 94, 0.3); color: var(--loss); }
         .btn-danger:hover { background: var(--loss-glow); color: var(--loss); border-color: var(--loss); box-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
 
-        /* Toggle Switch Styles */
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-input); transition: .3s; border-radius: 22px; border: 1px solid var(--border-subtle); }
@@ -244,10 +183,8 @@
         
         .cal-cell {
             aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-family: var(--font-mono);
-            font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-            background: rgba(0,0,0,0.3); color: var(--text-secondary); border-radius: var(--radius-md);
-            border: 1px solid transparent;
+            font-family: var(--font-mono); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            background: rgba(0,0,0,0.3); color: var(--text-secondary); border-radius: var(--radius-md); border: 1px solid transparent;
         }
         .cal-cell:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: var(--text-primary); transform: scale(1.05); z-index: 10; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .cal-cell.weekend { opacity: 0.3; }
@@ -283,6 +220,11 @@
         .ut-tooltip.show { opacity: 1; transform: translateY(0); }
         .tt-date { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .tt-val { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
+
+        /* Insights Card Styles */
+        .insight-bullet { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+        .insight-bullet:last-child { margin-bottom: 0; }
+        .insight-icon { font-size: 16px; }
     </style>
 </head>
 <body>
@@ -327,6 +269,13 @@
         </div>
     </div>
 
+    <div class="ut-card" style="margin-bottom: 24px; padding: 20px;">
+        <div class="ut-card-title" style="margin-bottom: 12px; color: var(--brand-solid);">Smart Insights 🧠</div>
+        <div id="insightsBox">
+            <div style="color:var(--text-muted); font-size:13px;">Analyzing your data...</div>
+        </div>
+    </div>
+
     <div class="dashboard-grid">
         
         <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -341,14 +290,12 @@
                 
                 <div class="form-group">
                     <span class="form-label">Instrument</span>
-                    <div class="pill-group" id="instrumentChips">
-                        </div>
+                    <div class="pill-group" id="instrumentChips"></div>
                 </div>
 
                 <div class="form-group" id="executionTypeGroup">
                     <span class="form-label">Execution Type</span>
-                    <div class="pill-group" id="tradeTypeChips">
-                        </div>
+                    <div class="pill-group" id="tradeTypeChips"></div>
                 </div>
                 
                 <div class="form-group">
@@ -356,8 +303,7 @@
                         <span class="form-label" style="margin-bottom:0;">Strategy / Setup</span>
                         <span id="delStratBtn" class="del-btn" style="color:var(--loss); cursor:pointer; font-size:11px; text-transform:uppercase; font-weight:700; display:none;">✕ Delete Active</span>
                     </div>
-                    <div class="pill-group" id="strategyChips">
-                        </div>
+                    <div class="pill-group" id="strategyChips"></div>
                 </div>
                 
                 <div class="form-group" style="margin-top: 24px;">
@@ -471,10 +417,14 @@
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTrade">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWin">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Loss</div><div class="val text-loss" id="statAvgLoss">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Reward:Risk</div><div class="val" id="statRR" style="color:var(--brand-solid);">1:0.0</div></div>
                     <div class="stat-item"><div class="lbl">Best Trade</div><div class="val text-profit" id="statMaxWin">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Worst Trade</div><div class="val text-loss" id="statMaxLoss">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Max Win Streak</div><div class="val text-profit" id="statWinStreak">0</div></div>
+                    <div class="stat-item"><div class="lbl">Max Loss Streak</div><div class="val text-loss" id="statLossStreak">0</div></div>
                     <div class="stat-item"><div class="lbl">Max Drawdown</div><div class="val text-loss" id="statMaxDD">₹0</div></div>
                     <div class="stat-item"><div class="lbl">DD Duration</div><div class="val" id="statDDDuration" style="font-family: var(--font-sans);">0d</div></div>
+                    <div class="stat-item"><div class="lbl">Current Streak</div><div class="val" id="statCurStreak">0</div></div>
                     <div class="stat-item"><div class="lbl">Total Trades</div><div class="val" id="statTradeCount">0</div></div>
                 </div>
             </div>
@@ -485,10 +435,14 @@
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTradeEq">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWinEq">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Loss</div><div class="val text-loss" id="statAvgLossEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Reward:Risk</div><div class="val" id="statRREq" style="color:var(--brand-solid);">1:0.0</div></div>
                     <div class="stat-item"><div class="lbl">Best Trade</div><div class="val text-profit" id="statMaxWinEq">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Worst Trade</div><div class="val text-loss" id="statMaxLossEq">₹0</div></div>
+                    <div class="stat-item"><div class="lbl">Max Win Streak</div><div class="val text-profit" id="statWinStreakEq">0</div></div>
+                    <div class="stat-item"><div class="lbl">Max Loss Streak</div><div class="val text-loss" id="statLossStreakEq">0</div></div>
                     <div class="stat-item"><div class="lbl">Max Drawdown</div><div class="val text-loss" id="statMaxDDEq">₹0</div></div>
                     <div class="stat-item"><div class="lbl">DD Duration</div><div class="val" id="statDDDurationEq" style="font-family: var(--font-sans);">0d</div></div>
+                    <div class="stat-item"><div class="lbl">Current Streak</div><div class="val" id="statCurStreakEq">0</div></div>
                     <div class="stat-item"><div class="lbl">Total Trades</div><div class="val" id="statTradeCountEq">0</div></div>
                 </div>
             </div>
@@ -518,7 +472,6 @@
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal()">✕</button>
         <h2 id="modalTitle" style="font-size:20px; font-weight:600; margin-bottom: 24px;">Details</h2>
-        
         <div id="modalContent"></div>
         <div id="noteSection"></div>
     </div>
@@ -527,11 +480,9 @@
 <script>
     let trades = [];
     let notesData = {};
-    
-    // Application States
     let isChargesOn = false;
     let isDividendsOn = false;
-    let hasAnimatedTopMetrics = false; // Prevent re-animating on every minor state click
+    let hasAnimatedTopMetrics = false; 
     
     const INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
     const TRADETYPES = ['My Algo', 'Other Algos', 'Manual'];
@@ -560,15 +511,12 @@
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
     Chart.defaults.plugins.tooltip.displayColors = false;
 
-    // --- UTILS & ANIMATIONS ---
     function normalizeDateStr(dateVal) {
         if (!dateVal) return "";
         if (typeof dateVal === 'string' && dateVal.length === 10 && dateVal.includes('-')) return dateVal;
         const d = new Date(dateVal);
         if (isNaN(d.getTime())) return dateVal;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
         return `${y}-${m}-${day}`;
     }
 
@@ -577,30 +525,21 @@
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            // easeOut Expo
             const ease = 1 - Math.pow(1 - progress, 3); 
             const current = start + ease * (end - start);
             
-            if (isCurrency) {
-                obj.innerText = `${current >= 0 ? '' : '-'}₹${Math.abs(current).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-            } else {
-                obj.innerText = (current % 1 !== 0 ? current.toFixed(2) : Math.floor(current)) + suffix;
-            }
+            if (isCurrency) obj.innerText = `${current >= 0 ? '' : '-'}₹${Math.abs(current).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
+            else obj.innerText = (current % 1 !== 0 ? current.toFixed(2) : Math.floor(current)) + suffix;
             
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                if (isCurrency) {
-                    obj.innerText = `${end >= 0 ? '' : '-'}₹${Math.abs(end).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-                } else {
-                    obj.innerText = (end % 1 !== 0 ? end.toFixed(2) : Math.floor(end)) + suffix;
-                }
+            if (progress < 1) window.requestAnimationFrame(step);
+            else {
+                if (isCurrency) obj.innerText = `${end >= 0 ? '' : '-'}₹${Math.abs(end).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
+                else obj.innerText = (end % 1 !== 0 ? end.toFixed(2) : Math.floor(end)) + suffix;
             }
         };
         window.requestAnimationFrame(step);
     }
 
-    // --- API CORE ---
     async function apiGet() {
         const res = await fetch(`${API_URL}?action=getData`, { method: 'GET', redirect: 'follow' });
         if (!res.ok) throw new Error("Network response was not ok");
@@ -610,140 +549,88 @@
     async function apiPost(action, payload = {}) {
         const res = await fetch(API_URL, {
             method: 'POST', redirect: 'follow',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-            body: JSON.stringify({ action, ...payload })
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, ...payload })
         });
         if (!res.ok) throw new Error("Network response was not ok");
         return await res.json();
     }
 
-    // --- DATA SYNC ---
     async function syncWithSheet() {
         try {
             const data = await apiGet();
-            
             trades = (data.trades || []).map(t => {
-                let tradeType = 'Manual';
-                let strategy = t.category;
-                let instrument = t.subCategory && t.subCategory !== '-' ? t.subCategory : 'Unspecified';
-
+                let tradeType = 'Manual', strategy = t.category, instrument = t.subCategory && t.subCategory !== '-' ? t.subCategory : 'Unspecified';
                 if (t.category && t.category.includes(' | ')) {
-                    const parts = t.category.split(' | ');
-                    tradeType = parts[0];
-                    strategy = parts[1];
+                    const parts = t.category.split(' | '); tradeType = parts[0]; strategy = parts[1];
                 } else {
-                    if (t.category === 'My Algo' || t.category === 'Other Algos' || t.category === 'Tez Algo') {
-                        tradeType = t.category === 'Tez Algo' ? 'Other Algos' : t.category;
-                        strategy = 'Default';
-                    } else if (t.category === 'Ironfly' || t.category === 'Commodity' || t.category === 'Equity') {
-                        tradeType = 'Manual';
-                        strategy = t.category;
-                    }
+                    if (t.category === 'My Algo' || t.category === 'Other Algos' || t.category === 'Tez Algo') { tradeType = t.category === 'Tez Algo' ? 'Other Algos' : t.category; strategy = 'Default'; } 
+                    else if (t.category === 'Ironfly' || t.category === 'Commodity' || t.category === 'Equity') { tradeType = 'Manual'; strategy = t.category; }
                 }
                 return { ...t, date: normalizeDateStr(t.date), tradeType, strategy, instrument };
             }).sort((a,b) => new Date(a.date) - new Date(b.date));
             
-            notesData = {};
-            customStrategies = {};
-
+            notesData = {}; customStrategies = {};
             if (data.notes) {
                 for (let key in data.notes) {
-                    if(key.startsWith('CHARGE_') || key.startsWith('DIVIDEND_')) {
-                        notesData[key] = data.notes[key];
-                    } else if(key.startsWith('STRATS_')) {
-                        const mapKey = key.replace('STRATS_', '');
-                        customStrategies[mapKey] = data.notes[key].split('|||');
-                    } else {
-                        notesData[normalizeDateStr(key)] = data.notes[key];
-                    }
+                    if(key.startsWith('CHARGE_') || key.startsWith('DIVIDEND_')) notesData[key] = data.notes[key];
+                    else if(key.startsWith('STRATS_')) customStrategies[key.replace('STRATS_', '')] = data.notes[key].split('|||');
+                    else notesData[normalizeDateStr(key)] = data.notes[key];
                 }
             }
             
             trades.forEach(t => {
                 const mapKey = `${t.instrument}|${t.tradeType}`;
                 if (!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
-                if (!customStrategies[mapKey].includes(t.strategy)) {
-                    customStrategies[mapKey].push(t.strategy);
-                }
+                if (!customStrategies[mapKey].includes(t.strategy)) customStrategies[mapKey].push(t.strategy);
             });
-            
             updateUI();
-        } catch(e) {
-            console.error(e);
-            alert("Cannot connect to Google Sheets.");
-        }
+        } catch(e) { console.error(e); alert("Cannot connect to Google Sheets."); }
     }
 
     const loadData = syncWithSheet;
 
-    // --- WRITE OPERATIONS ---
     async function addTrade() {
-        const date = document.getElementById('dateInput').value;
-        const pnl = parseFloat(document.getElementById('pnlInput').value);
+        const date = document.getElementById('dateInput').value, pnl = parseFloat(document.getElementById('pnlInput').value);
         if(!date || isNaN(pnl)) return alert("Invalid details");
-
         const packedCategory = `${selectedTradeType} | ${selectedStrategy}`;
         const newTrade = { id: Date.now(), date: date, category: packedCategory, subCategory: selectedInstrument, pnl };
-
         await apiPost('addTrade', { trade: newTrade });
         document.getElementById('pnlInput').value = '';
         await syncWithSheet();
     }
 
-    async function del(id) {
-        await apiPost('deleteTrade', { id });
-        closeModal();
-        await syncWithSheet();
-    }
+    async function del(id) { await apiPost('deleteTrade', { id }); closeModal(); await syncWithSheet(); }
 
     async function saveNoteEntry(d) {
-        const val = document.getElementById('modalNote').value;
-        const updatedNotes = { ...notesData };
+        const val = document.getElementById('modalNote').value, updatedNotes = { ...notesData };
         if(val.trim() === "") delete updatedNotes[d]; else updatedNotes[d] = val;
-        await apiPost('saveNotes', { notes: updatedNotes });
-        closeModal();
-        await syncWithSheet();
+        await apiPost('saveNotes', { notes: updatedNotes }); closeModal(); await syncWithSheet();
     }
 
     async function saveChargeEntry() {
-        const ym = document.getElementById('chargeMonth').value;
-        const amt = document.getElementById('chargeInputAmount').value;
-        if(!ym) return;
-        const updatedNotes = { ...notesData };
+        const ym = document.getElementById('chargeMonth').value, amt = document.getElementById('chargeInputAmount').value;
+        if(!ym) return; const updatedNotes = { ...notesData };
         if(amt === "" || isNaN(amt)) delete updatedNotes['CHARGE_' + ym]; else updatedNotes['CHARGE_' + ym] = parseFloat(amt);
-        await apiPost('saveNotes', { notes: updatedNotes });
-        await syncWithSheet();
+        await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet();
     }
 
     async function saveDividendEntry() {
-        const ym = document.getElementById('dividendMonth').value;
-        const amt = document.getElementById('dividendInputAmount').value;
-        if(!ym) return;
-        const updatedNotes = { ...notesData };
+        const ym = document.getElementById('dividendMonth').value, amt = document.getElementById('dividendInputAmount').value;
+        if(!ym) return; const updatedNotes = { ...notesData };
         if(amt === "" || isNaN(amt)) delete updatedNotes['DIVIDEND_' + ym]; else updatedNotes['DIVIDEND_' + ym] = parseFloat(amt);
-        await apiPost('saveNotes', { notes: updatedNotes });
-        await syncWithSheet();
+        await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet();
     }
 
     async function addNewStrategy() {
         const newStrat = prompt(`Enter a new strategy name for ${selectedInstrument} (${selectedTradeType}):`);
         if(!newStrat || newStrat.trim() === "") return;
-        
-        const cleanStrat = newStrat.trim();
-        const mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        
+        const cleanStrat = newStrat.trim(), mapKey = `${selectedInstrument}|${selectedTradeType}`;
         if(!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
         if(customStrategies[mapKey].includes(cleanStrat)) return alert("Strategy already exists!");
-        
-        customStrategies[mapKey].push(cleanStrat);
-        selectedStrategy = cleanStrat; 
-        
-        const updatedNotes = { ...notesData };
-        updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-        
+        customStrategies[mapKey].push(cleanStrat); selectedStrategy = cleanStrat; 
+        const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
         renderTradeLogUI(); 
-        try { await apiPost('saveNotes', { notes: updatedNotes }); } 
-        catch(e) { alert("Failed to sync new strategy to server."); }
+        try { await apiPost('saveNotes', { notes: updatedNotes }); } catch(e) { alert("Failed to sync new strategy to server."); }
     }
 
     async function deleteActiveStrategy() {
@@ -751,44 +638,31 @@
             const mapKey = `${selectedInstrument}|${selectedTradeType}`;
             customStrategies[mapKey] = customStrategies[mapKey].filter(s => s !== selectedStrategy);
             selectedStrategy = customStrategies[mapKey][0] || 'Default';
-            
-            const updatedNotes = { ...notesData };
-            updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-            
+            const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
             renderTradeLogUI();
-            try { await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet(); } 
-            catch(e) { alert("Failed to sync deletion to server."); }
+            try { await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet(); } catch(e) { alert("Failed to sync deletion to server."); }
         }
     }
 
-    async function clearAll() {
-        if(confirm("Clear all journal data? This action is irreversible.")) {
-            await apiPost('clearAll');
-            await syncWithSheet();
-        }
-    }
+    async function clearAll() { if(confirm("Clear all journal data? This action is irreversible.")) { await apiPost('clearAll'); await syncWithSheet(); } }
 
     async function importData(inp) {
         const r = new FileReader();
         r.onload = async e => {
             const d = JSON.parse(e.target.result);
-            let importedTrades = []; let importedNotes = {};
+            let importedTrades = [], importedNotes = {};
             if(Array.isArray(d)) importedTrades = d; else { importedTrades = d.trades || []; importedNotes = d.notes || {}; }
             importedTrades = importedTrades.map(t => ({...t, date: normalizeDateStr(t.date)})).sort((a,b) => new Date(a.date) - new Date(b.date));
-            await apiPost('import', { trades: importedTrades, notes: importedNotes });
-            await syncWithSheet();
+            await apiPost('import', { trades: importedTrades, notes: importedNotes }); await syncWithSheet();
         };
         r.readAsText(inp.files[0]);
     }
 
     function exportData() {
-        const data = { trades, notes: notesData };
-        const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = 'rocky_bull_backup.json'; a.click();
+        const data = { trades, notes: notesData }, blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rocky_bull_backup.json'; a.click();
     }
 
-    // --- UI CONTROLS ---
     function toggleCharges() { isChargesOn = document.getElementById('chargesToggle').checked; updateUI(); }
     function toggleDividends() { isDividendsOn = document.getElementById('dividendsToggle').checked; updateUI(); }
 
@@ -813,62 +687,42 @@
         renderGauges(); 
         renderCalendar(); 
         renderCharts(); 
-        hasAnimatedTopMetrics = true; // Set flag so it doesn't re-animate on every toggle click
+        renderInsights();
+        hasAnimatedTopMetrics = true; 
     }
 
     // --- RENDER FUNCTIONS ---
     function renderTradeLogUI() {
-        const instContainer = document.getElementById('instrumentChips');
-        instContainer.innerHTML = '';
+        const instContainer = document.getElementById('instrumentChips'); instContainer.innerHTML = '';
         INSTRUMENTS.forEach(inst => {
-            const btn = document.createElement('button');
-            btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`;
-            btn.innerText = inst;
-            btn.onclick = () => { 
-                selectedInstrument = inst; 
-                if (inst === 'Equity' || inst === 'Commodity') selectedTradeType = 'Manual';
-                renderTradeLogUI(); 
-            };
+            const btn = document.createElement('button'); btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`; btn.innerText = inst;
+            btn.onclick = () => { selectedInstrument = inst; if (inst === 'Equity' || inst === 'Commodity') selectedTradeType = 'Manual'; renderTradeLogUI(); };
             instContainer.appendChild(btn);
         });
 
         const execTypeGroup = document.getElementById('executionTypeGroup');
-        if (selectedInstrument === 'Equity' || selectedInstrument === 'Commodity') {
-            execTypeGroup.style.display = 'none'; selectedTradeType = 'Manual';
-        } else { execTypeGroup.style.display = 'block'; }
+        if (selectedInstrument === 'Equity' || selectedInstrument === 'Commodity') { execTypeGroup.style.display = 'none'; selectedTradeType = 'Manual'; } else { execTypeGroup.style.display = 'block'; }
 
-        const typeContainer = document.getElementById('tradeTypeChips');
-        typeContainer.innerHTML = '';
+        const typeContainer = document.getElementById('tradeTypeChips'); typeContainer.innerHTML = '';
         TRADETYPES.forEach(type => {
-            const btn = document.createElement('button');
-            btn.className = `pill ${type === selectedTradeType ? 'active' : ''}`;
-            btn.innerText = type;
-            btn.onclick = () => { selectedTradeType = type; renderTradeLogUI(); };
-            typeContainer.appendChild(btn);
+            const btn = document.createElement('button'); btn.className = `pill ${type === selectedTradeType ? 'active' : ''}`; btn.innerText = type;
+            btn.onclick = () => { selectedTradeType = type; renderTradeLogUI(); }; typeContainer.appendChild(btn);
         });
 
-        const stratContainer = document.getElementById('strategyChips');
-        stratContainer.innerHTML = '';
+        const stratContainer = document.getElementById('strategyChips'); stratContainer.innerHTML = '';
         const mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        
         let strats = customStrategies[mapKey] || ['Default'];
         if (!strats.includes(selectedStrategy)) selectedStrategy = strats[0] || 'Default';
 
         strats.forEach(s => {
-            const btn = document.createElement('button');
-            btn.className = `pill ${s === selectedStrategy ? 'active' : ''}`;
-            btn.innerText = s;
-            btn.onclick = () => { selectedStrategy = s; renderTradeLogUI(); };
-            stratContainer.appendChild(btn);
+            const btn = document.createElement('button'); btn.className = `pill ${s === selectedStrategy ? 'active' : ''}`; btn.innerText = s;
+            btn.onclick = () => { selectedStrategy = s; renderTradeLogUI(); }; stratContainer.appendChild(btn);
         });
 
-        const addBtn = document.createElement('button');
-        addBtn.className = 'pill add-new'; addBtn.innerText = '+ Add New'; addBtn.onclick = addNewStrategy;
-        stratContainer.appendChild(addBtn);
+        const addBtn = document.createElement('button'); addBtn.className = 'pill add-new'; addBtn.innerText = '+ Add New'; addBtn.onclick = addNewStrategy; stratContainer.appendChild(addBtn);
 
         const delBtn = document.getElementById('delStratBtn');
-        if (selectedStrategy === 'Default' || strats.length <= 1) delBtn.style.display = 'none';
-        else { delBtn.style.display = 'block'; delBtn.onclick = deleteActiveStrategy; }
+        if (selectedStrategy === 'Default' || strats.length <= 1) delBtn.style.display = 'none'; else { delBtn.style.display = 'block'; delBtn.onclick = deleteActiveStrategy; }
     }
 
     function renderDayWiseAlgo() {
@@ -877,8 +731,7 @@
             if ((t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') && ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument)) {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
-                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    const dayOfWeek = d.getDay(); 
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]), dayOfWeek = d.getDay(); 
                     if (dayOfWeek >= 1 && dayOfWeek <= 5) dayTotals[dayOfWeek - 1] += t.pnl;
                 }
             }
@@ -886,34 +739,28 @@
         
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
         days.forEach((d, i) => {
-            const el = document.getElementById(`algo${d}`);
-            const val = dayTotals[i];
+            const el = document.getElementById(`algo${d}`), val = dayTotals[i];
             el.innerText = `₹${val.toLocaleString()}`;
             if(val >= 0) { el.style.color = "var(--profit)"; } else { el.style.color = "var(--loss)"; }
         });
     }
 
     function renderTelemetry() {
-        const pnlEl = document.getElementById('statTotalPnl');
-        const fnoEl = document.getElementById('statFnoPnl');
-        const eqEl = document.getElementById('statEqPnl');
+        const pnlEl = document.getElementById('statTotalPnl'), fnoEl = document.getElementById('statFnoPnl'), eqEl = document.getElementById('statEqPnl');
 
         if(trades.length === 0) {
-            pnlEl.innerText = "₹0"; pnlEl.className = "metric-value";
-            fnoEl.innerText = "₹0"; fnoEl.className = "";
-            eqEl.innerText = "₹0"; eqEl.className = "";
+            pnlEl.innerText = "₹0"; pnlEl.className = "metric-value"; fnoEl.innerText = "₹0"; fnoEl.className = ""; eqEl.innerText = "₹0"; eqEl.className = "";
             updateTelemetryGrid([], ''); updateTelemetryGrid([], 'Eq');
             return;
         }
         
         const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
-        let totalCharges = 0; let totalDividends = 0;
+        let totalCharges = 0, totalDividends = 0;
         
         if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0; }
         if(isDividendsOn) { for(let k in notesData) if(k.startsWith('DIVIDEND_')) totalDividends += parseFloat(notesData[k]) || 0; }
         
         const displayPnl = grossPnl - totalCharges + totalDividends;
-
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
@@ -932,9 +779,7 @@
         eqEl.className = eqPnl >= 0 ? 'text-profit' : 'text-loss';
 
         if (!hasAnimatedTopMetrics) {
-            animateNumber(pnlEl, 0, displayPnl, 1200, true);
-            animateNumber(fnoEl, 0, fnoPnl, 1000, true);
-            animateNumber(eqEl, 0, eqPnl, 1000, true);
+            animateNumber(pnlEl, 0, displayPnl, 1200, true); animateNumber(fnoEl, 0, fnoPnl, 1000, true); animateNumber(eqEl, 0, eqPnl, 1000, true);
         } else {
             pnlEl.innerText = `${displayPnl >= 0 ? '' : '-'}₹${Math.abs(displayPnl).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
             fnoEl.innerText = `${fnoPnl >= 0 ? '' : '-'}₹${Math.abs(fnoPnl).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
@@ -947,35 +792,48 @@
 
     function updateTelemetryGrid(tradeList, suffix) {
         if(tradeList.length === 0) {
-            document.getElementById('statAvgTrade' + suffix).innerText = "₹0";
-            document.getElementById('statAvgWin' + suffix).innerText = "₹0";
-            document.getElementById('statAvgLoss' + suffix).innerText = "₹0";
-            document.getElementById('statMaxWin' + suffix).innerText = "₹0";
-            document.getElementById('statMaxLoss' + suffix).innerText = "₹0";
-            document.getElementById('statMaxDD' + suffix).innerText = "₹0";
-            document.getElementById('statDDDuration' + suffix).innerText = "0d";
-            document.getElementById('statTradeCount' + suffix).innerText = "0";
+            document.getElementById('statAvgTrade' + suffix).innerText = "₹0"; document.getElementById('statAvgWin' + suffix).innerText = "₹0";
+            document.getElementById('statAvgLoss' + suffix).innerText = "₹0"; document.getElementById('statMaxWin' + suffix).innerText = "₹0";
+            document.getElementById('statMaxLoss' + suffix).innerText = "₹0"; document.getElementById('statMaxDD' + suffix).innerText = "₹0";
+            document.getElementById('statDDDuration' + suffix).innerText = "0d"; document.getElementById('statTradeCount' + suffix).innerText = "0";
+            document.getElementById('statRR' + suffix).innerText = "1:0.0"; document.getElementById('statWinStreak' + suffix).innerText = "0";
+            document.getElementById('statLossStreak' + suffix).innerText = "0"; document.getElementById('statCurStreak' + suffix).innerText = "0";
             return;
         }
 
-        const grossPnl = tradeList.reduce((a,b) => a + b.pnl, 0);
-        const avgTrade = grossPnl / tradeList.length;
-        const wins = tradeList.filter(t => t.pnl > 0);
-        const losses = tradeList.filter(t => t.pnl <= 0);
+        const grossPnl = tradeList.reduce((a,b) => a + b.pnl, 0), avgTrade = grossPnl / tradeList.length;
+        const wins = tradeList.filter(t => t.pnl > 0), losses = tradeList.filter(t => t.pnl <= 0);
         const avgWin = wins.length ? wins.reduce((a,b)=>a+b.pnl,0)/wins.length : 0;
         const avgLoss = losses.length ? losses.reduce((a,b)=>a+b.pnl,0)/losses.length : 0;
         const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
         const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
+        const rr = avgLoss !== 0 ? Math.abs(avgWin / avgLoss).toFixed(2) : (avgWin > 0 ? "∞" : "0.0");
+
+        let currentStreakVal = 0, currentStreakType = null;
+        let maxWinStreak = 0, maxLossStreak = 0, tempWinStreak = 0, tempLossStreak = 0;
+        const sortedTrades = [...tradeList].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        sortedTrades.forEach(t => {
+            if (t.pnl > 0) {
+                tempWinStreak++; tempLossStreak = 0;
+                if (tempWinStreak > maxWinStreak) maxWinStreak = tempWinStreak;
+                if (currentStreakType === 'win') currentStreakVal++; else { currentStreakType = 'win'; currentStreakVal = 1; }
+            } else if (t.pnl < 0) {
+                tempLossStreak++; tempWinStreak = 0;
+                if (tempLossStreak > maxLossStreak) maxLossStreak = tempLossStreak;
+                if (currentStreakType === 'loss') currentStreakVal++; else { currentStreakType = 'loss'; currentStreakVal = 1; }
+            } else { tempWinStreak = 0; tempLossStreak = 0; currentStreakVal = 0; currentStreakType = null; }
+        });
+
+        const streakText = currentStreakType === 'win' ? `+${currentStreakVal} W` : (currentStreakType === 'loss' ? `-${currentStreakVal} L` : '0');
+        const streakClass = currentStreakType === 'win' ? 'val text-profit' : (currentStreakType === 'loss' ? 'val text-loss' : 'val');
 
         const dailyTradePnL = {};
         tradeList.forEach(t => { dailyTradePnL[t.date] = (dailyTradePnL[t.date] || 0) + t.pnl; });
 
-        let cumulative = 0; let peak = -Infinity; let maxDD = 0;
-        let ddPeakDate = null; let maxDD_StartDate = null; let maxDD_EndDate = null;
-
+        let cumulative = 0, peak = -Infinity, maxDD = 0, ddPeakDate = null, maxDD_StartDate = null, maxDD_EndDate = null;
         Object.keys(dailyTradePnL).sort().forEach(dateStr => {
-            cumulative += dailyTradePnL[dateStr];
-            const tDate = new Date(dateStr);
+            cumulative += dailyTradePnL[dateStr]; const tDate = new Date(dateStr);
             if(cumulative > peak) { peak = cumulative; ddPeakDate = tDate; } 
             const dd = cumulative - peak;
             if(dd < maxDD) { maxDD = dd; maxDD_StartDate = ddPeakDate; maxDD_EndDate = tDate; }
@@ -992,6 +850,11 @@
         document.getElementById('statMaxDD' + suffix).innerText = `₹${maxDD.toLocaleString()}`;
         document.getElementById('statDDDuration' + suffix).innerText = `${durationDays}d`;
         document.getElementById('statTradeCount' + suffix).innerText = tradeList.length;
+        document.getElementById('statRR' + suffix).innerText = `1:${rr}`;
+        document.getElementById('statWinStreak' + suffix).innerText = maxWinStreak;
+        document.getElementById('statLossStreak' + suffix).innerText = maxLossStreak;
+        document.getElementById('statCurStreak' + suffix).innerText = streakText;
+        document.getElementById('statCurStreak' + suffix).className = streakClass;
     }
 
     function renderGauges() {
@@ -1001,40 +864,66 @@
         const ctxWin = document.getElementById('winGauge').getContext('2d');
         if(gaugeWin) gaugeWin.destroy();
         let winRate = 0;
-        if(trades.length > 0) {
-            const wins = trades.filter(t => t.pnl > 0).length;
-            winRate = Math.round((wins / trades.length) * 100);
-        }
+        if(trades.length > 0) winRate = Math.round((trades.filter(t => t.pnl > 0).length / trades.length) * 100);
         
         const winEl = document.getElementById('winRateVal');
-        if (!hasAnimatedTopMetrics) animateNumber(winEl, 0, winRate, 1200, false, '%');
-        else winEl.innerText = `${winRate}%`;
+        if (!hasAnimatedTopMetrics) animateNumber(winEl, 0, winRate, 1200, false, '%'); else winEl.innerText = `${winRate}%`;
         
-        gaugeWin = new Chart(ctxWin, {
-            type: 'doughnut',
-            data: { datasets: [{ data: [winRate, 100 - winRate], backgroundColor: ['#10b981', colorBg], borderRadius: 2 }] },
-            options: commonOptions
-        });
+        gaugeWin = new Chart(ctxWin, { type: 'doughnut', data: { datasets: [{ data: [winRate, 100 - winRate], backgroundColor: ['#10b981', colorBg], borderRadius: 2 }] }, options: commonOptions });
 
         const ctxPf = document.getElementById('pfGauge').getContext('2d');
         if(gaugePf) gaugePf.destroy();
-        const grossWin = trades.filter(t=>t.pnl>0).reduce((a,b)=>a+b.pnl,0);
-        const grossLoss = Math.abs(trades.filter(t=>t.pnl<0).reduce((a,b)=>a+b.pnl,0));
+        const grossWin = trades.filter(t=>t.pnl>0).reduce((a,b)=>a+b.pnl,0), grossLoss = Math.abs(trades.filter(t=>t.pnl<0).reduce((a,b)=>a+b.pnl,0));
         let pf = grossLoss === 0 ? (grossWin > 0 ? 5 : 0) : (grossWin / grossLoss);
         pf = Math.min(pf, 5); 
         
         const pfEl = document.getElementById('pfVal');
-        if (grossLoss === 0 && grossWin > 0) pfEl.innerText = "∞";
-        else {
-            if (!hasAnimatedTopMetrics) animateNumber(pfEl, 0, pf, 1200, false);
-            else pfEl.innerText = pf.toFixed(2);
-        }
+        if (grossLoss === 0 && grossWin > 0) pfEl.innerText = "∞"; else { if (!hasAnimatedTopMetrics) animateNumber(pfEl, 0, pf, 1200, false); else pfEl.innerText = pf.toFixed(2); }
         
-        gaugePf = new Chart(ctxPf, {
-            type: 'doughnut',
-            data: { datasets: [{ data: [pf, 5 - pf], backgroundColor: ['#8b5cf6', colorBg], borderRadius: 2 }] },
-            options: commonOptions
+        gaugePf = new Chart(ctxPf, { type: 'doughnut', data: { datasets: [{ data: [pf, 5 - pf], backgroundColor: ['#8b5cf6', colorBg], borderRadius: 2 }] }, options: commonOptions });
+    }
+
+    function renderInsights() {
+        const box = document.getElementById('insightsBox');
+        if (!trades || trades.length === 0) {
+            box.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Need more data to generate insights...</div>'; return;
+        }
+
+        let insights = [];
+
+        // 1. Best Day of Week
+        let dayMap = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        trades.forEach(t => { const d = new Date(t.date).getDay(); dayMap[d] += t.pnl; });
+        let bestDay = -1, maxDayPnl = -Infinity;
+        for (let i=1; i<=5; i++) { if (dayMap[i] > maxDayPnl) { maxDayPnl = dayMap[i]; bestDay = i; } }
+        if (maxDayPnl > 0) insights.push(`<div class="insight-bullet"><span class="insight-icon">📅</span><span><strong>${dayNames[bestDay]}s</strong> are your most profitable days (₹${maxDayPnl.toLocaleString()}).</span></div>`);
+
+        // 2. Best/Worst Instrument
+        let instMap = {};
+        trades.forEach(t => { instMap[t.instrument] = (instMap[t.instrument]||0) + t.pnl; });
+        let bestInst = '', maxInstPnl = -Infinity, worstInst = '', minInstPnl = Infinity;
+        for (let inst in instMap) {
+            if (instMap[inst] > maxInstPnl) { maxInstPnl = instMap[inst]; bestInst = inst; }
+            if (instMap[inst] < minInstPnl) { minInstPnl = instMap[inst]; worstInst = inst; }
+        }
+        if (maxInstPnl > 0 && bestInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">🔥</span><span><strong>${bestInst}</strong> is your top performing instrument (₹${maxInstPnl.toLocaleString()}). Keep exploiting this edge.</span></div>`);
+        if (minInstPnl < 0 && worstInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">⚠️</span><span><strong>${worstInst}</strong> is bleeding capital (₹${Math.abs(minInstPnl).toLocaleString()} loss). Consider reviewing your strategy or sizing down.</span></div>`);
+
+        // 3. Current Global Streak
+        const sortedTrades = [...trades].sort((a,b) => new Date(a.date) - new Date(b.date));
+        let curVal = 0, curType = null;
+        sortedTrades.forEach(t => {
+            if (t.pnl > 0) { if (curType === 'win') curVal++; else { curType = 'win'; curVal = 1; } } 
+            else if (t.pnl < 0) { if (curType === 'loss') curVal++; else { curType = 'loss'; curVal = 1; } } 
+            else { curType = null; curVal = 0; }
         });
+        
+        if (curType === 'win' && curVal >= 3) insights.push(`<div class="insight-bullet"><span class="insight-icon">🚀</span><span>You are on a <strong>${curVal}-trade winning streak</strong>! Stay disciplined and don't get overconfident.</span></div>`);
+        else if (curType === 'loss' && curVal >= 3) insights.push(`<div class="insight-bullet"><span class="insight-icon">🛡️</span><span>You're in a <strong>${curVal}-trade drawdown</strong>. Protect capital and stick strictly to your rules.</span></div>`);
+
+        if (insights.length === 0) box.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Logging more trades will unlock deep statistical insights.</div>';
+        else box.innerHTML = insights.join('');
     }
 
     function renderCharts() {
@@ -1052,18 +941,14 @@
             data: { 
                 labels: globalDates, 
                 datasets: [{ 
-                    label: 'Net Equity', 
-                    data: eq, 
-                    borderWidth: 2, 
+                    label: 'Net Equity', data: eq, borderWidth: 2, 
                     fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.1)', below: 'rgba(244, 63, 94, 0.1)' },
                     segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
-                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e',
-                    pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
+                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
                 }] 
             }, 
             options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} } },
                 interaction: { mode: 'index', intersect: false }
             } 
@@ -1072,8 +957,7 @@
         const y = curDate.getFullYear(), m = curDate.getMonth(), daysInMonth = new Date(y, m + 1, 0).getDate(), monthPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
         const monthLabels = [], monthData = [];
         for(let i = 1; i <= daysInMonth; i++) {
-            const dateStr = `${monthPrefix}-${String(i).padStart(2,'0')}`;
-            monthLabels.push(String(i)); 
+            const dateStr = `${monthPrefix}-${String(i).padStart(2,'0')}`; monthLabels.push(String(i)); 
             monthData.push(trades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl, 0));
         }
 
@@ -1081,18 +965,13 @@
         if(chart2) chart2.destroy();
         chart2 = new Chart(ctx2, {
             type: 'bar',
-            data: {
-                labels: monthLabels,
-                datasets: [{ label: 'Daily P/L', data: monthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 4 }]
-            },
+            data: { labels: monthLabels, datasets: [{ label: 'Daily P/L', data: monthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 4 }] },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { family: "'JetBrains Mono', monospace", size: 10 } } },
                     y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} }
-                },
-                interaction: { mode: 'index', intersect: false }
+                }, interaction: { mode: 'index', intersect: false }
             }
         });
 
@@ -1109,18 +988,13 @@
         if(chart3) chart3.destroy();
         chart3 = new Chart(ctx3, {
             type: 'bar',
-            data: {
-                labels: aggMonthLabels,
-                datasets: [{ label: 'Monthly Net P/L', data: aggMonthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 6 }]
-            },
+            data: { labels: aggMonthLabels, datasets: [{ label: 'Monthly Net P/L', data: aggMonthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 6 }] },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { family: "'JetBrains Mono', monospace", size: 11, weight: '600' } } },
                     y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} }
-                },
-                interaction: { mode: 'index', intersect: false }
+                }, interaction: { mode: 'index', intersect: false }
             }
         });
     }
@@ -1154,12 +1028,10 @@
             if(notesData[dateStr]) { el.classList.add('has-note'); el.innerHTML += `<div class="indicator-dot"></div>`; }
             
             if(dayTrades.length > 0) {
-                el.innerHTML = i + (notesData[dateStr] ? `<div class="indicator-dot"></div>` : '');
-                el.classList.add('has-data');
+                el.innerHTML = i + (notesData[dateStr] ? `<div class="indicator-dot"></div>` : ''); el.classList.add('has-data');
                 if(pnl > 0) { let alpha = 0.1 + ((pnl / maxWin) * 0.4); el.classList.add('profit'); el.style.backgroundColor = `rgba(16, 185, 129, ${alpha})`; }
                 else if(pnl < 0) { let alpha = 0.1 + ((Math.abs(pnl) / maxLoss) * 0.4); el.classList.add('loss'); el.style.backgroundColor = `rgba(244, 63, 94, ${alpha})`; }
-                el.addEventListener('mouseenter', (e) => showTooltip(e, dateStr, pnl)); 
-                el.addEventListener('mouseleave', hideTooltip);
+                el.addEventListener('mouseenter', (e) => showTooltip(e, dateStr, pnl)); el.addEventListener('mouseleave', hideTooltip);
             } else { 
                 el.innerHTML = i + (notesData[dateStr] ? `<div class="indicator-dot"></div>` : ''); 
                 if(isWeekend) el.classList.add('weekend'); 
@@ -1169,12 +1041,8 @@
     }
 
     function showTooltip(e, d, p) { 
-        const r = e.target.getBoundingClientRect(); 
-        tooltip.innerHTML = `<div class="tt-date">${d}</div><div class="tt-val ${p >= 0 ? 'text-profit' : 'text-loss'}">${p >= 0 ? '+' : ''}₹${p.toLocaleString()}</div>`; 
-        tooltip.style.display = 'flex';
-        const tr = tooltip.getBoundingClientRect(); 
-        tooltip.style.top = `${r.top - tr.height - 12}px`; tooltip.style.left = `${r.left + (r.width / 2) - (tr.width / 2)}px`; 
-        tooltip.classList.add('show'); 
+        const r = e.target.getBoundingClientRect(); tooltip.innerHTML = `<div class="tt-date">${d}</div><div class="tt-val ${p >= 0 ? 'text-profit' : 'text-loss'}">${p >= 0 ? '+' : ''}₹${p.toLocaleString()}</div>`; 
+        tooltip.style.display = 'flex'; const tr = tooltip.getBoundingClientRect(); tooltip.style.top = `${r.top - tr.height - 12}px`; tooltip.style.left = `${r.left + (r.width / 2) - (tr.width / 2)}px`; tooltip.classList.add('show'); 
     }
     function hideTooltip() { tooltip.classList.remove('show'); }
 
@@ -1183,12 +1051,10 @@
         if(!s || !e) return;
         const sub = trades.filter(t => t.date >= s && t.date <= e); 
         let tot = sub.reduce((a,b)=>a+b.pnl,0);
-        
         let bd = {}, instBd = {};  
         sub.forEach(t => {
             let stratName = t.tradeType === 'Manual' ? (t.strategy === 'Default' ? `${t.instrument} (Base)` : `${t.instrument} (${t.strategy})`) : `${t.instrument} (${t.tradeType} - ${t.strategy})`;
-            bd[stratName] = (bd[stratName]||0) + t.pnl;
-            instBd[t.instrument] = (instBd[t.instrument]||0) + t.pnl;
+            bd[stratName] = (bd[stratName]||0) + t.pnl; instBd[t.instrument] = (instBd[t.instrument]||0) + t.pnl;
         });
 
         const totEl = document.getElementById('repTotal');
@@ -1201,8 +1067,7 @@
 
         let hInst = '';
         for(let k in instBd) hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
-        document.getElementById('repInstBreakdown').innerHTML = hInst;
-        document.getElementById('reportBox').style.display = 'block';
+        document.getElementById('repInstBreakdown').innerHTML = hInst; document.getElementById('reportBox').style.display = 'block';
     }
 
     function openModal(d, i) { 
@@ -1212,19 +1077,16 @@
             h += '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 24px;">'; 
             i.forEach(t => {
                 let titleText = `${t.instrument} — ${t.tradeType} (${t.strategy})`;
-                h += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+                h += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
                     <div style="font-weight:600; font-size:14px;">${titleText}</div>
                     <div style="display:flex; align-items:center; gap:20px;">
                         <span class="${t.pnl >= 0 ? 'text-profit' : 'text-loss'}" style="font-weight:700; font-size:15px; font-family:var(--font-mono);">₹${t.pnl.toLocaleString()}</span>
                         <button onclick="del(${t.id})" style="background:var(--bg-hover); border:none; color:var(--text-secondary); cursor:pointer; font-size:12px; padding:6px 10px; border-radius:6px; transition:0.2s;">Del</button>
-                    </div>
-                </div>`;
+                    </div></div>`;
             }); 
             h += '</div>'; 
         } else { h += '<div style="text-align:center; color:var(--text-muted); font-size:14px; margin-bottom:24px; padding:30px 20px; background:rgba(0,0,0,0.3); border-radius:var(--radius-md);">No executions found for this date.</div>'; }
         document.getElementById('modalContent').innerHTML = h; 
-
         const noteVal = notesData[d] || '';
         document.getElementById('noteSection').innerHTML = `
             <div>
