@@ -170,7 +170,7 @@
         input:checked + .slider { background-color: var(--brand-solid); border-color: var(--brand-solid); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
         input:checked + .slider:before { transform: translateX(18px); background-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.8); }
 
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .cal-title { font-size: 16px; font-weight: 600; transition: text-shadow 0.3s; }
         .cal-header:hover .cal-title { text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         .cal-nav-group { display: flex; gap: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 4px; transition: 0.3s; }
@@ -359,7 +359,10 @@
             
             <div class="ut-card">
                 <div class="cal-header" style="margin-bottom: 16px;">
-                    <div class="cal-title" id="calMonthYear">Month</div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="cal-title" id="calMonthYear">Month</div>
+                        <div id="calMonthSum" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); transition: all 0.3s ease;">₹0</div>
+                    </div>
                     <div class="cal-nav-group">
                         <button class="cal-btn" onclick="moveMonth(-1)">‹</button>
                         <button class="cal-btn" onclick="moveMonth(1)">›</button>
@@ -808,7 +811,6 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
-        // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
         else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
         else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
@@ -1068,13 +1070,12 @@
         });
     }
 
-    function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); renderCalendar(); } // Only render calendar on month change
+    function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); renderCalendar(); }
     
     function renderCalendar() {
         const y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
         
-        // Multi-Select Filtering Logic
         const calFilteredTrades = trades.filter(t => {
             let instMatch = calFilterInst.length === 0 || calFilterInst.includes(t.instrument);
             let dayMatch = false;
@@ -1096,10 +1097,31 @@
         const fDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
         
         let maxWin = 0, maxLoss = 0;
+        let currentMonthSum = 0; // Added sum logic
+        
         for(let i = 1; i <= days; i++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             const pnl = calFilteredTrades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl,0);
-            if(pnl > 0) maxWin = Math.max(maxWin, pnl); if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
+            if(pnl > 0) maxWin = Math.max(maxWin, pnl); 
+            if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
+            currentMonthSum += pnl; 
+        }
+
+        // Color and update the Filter Sum Pill
+        const sumEl = document.getElementById('calMonthSum');
+        sumEl.innerText = `${currentMonthSum >= 0 ? '' : '-'}₹${Math.abs(currentMonthSum).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
+        if(currentMonthSum > 0) {
+            sumEl.style.color = "var(--profit)";
+            sumEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
+            sumEl.style.background = "rgba(16, 185, 129, 0.1)";
+        } else if(currentMonthSum < 0) {
+            sumEl.style.color = "var(--loss)";
+            sumEl.style.borderColor = "rgba(244, 63, 94, 0.3)";
+            sumEl.style.background = "rgba(244, 63, 94, 0.1)";
+        } else {
+            sumEl.style.color = "var(--text-secondary)";
+            sumEl.style.borderColor = "var(--border-subtle)";
+            sumEl.style.background = "rgba(255,255,255,0.05)";
         }
 
         for(let i = 0; i < fDay; i++) grid.innerHTML += '<div></div>';
