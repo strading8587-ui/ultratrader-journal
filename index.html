@@ -412,7 +412,7 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Performance Telemetry (Nifty / Banknifty / Sensex)</div>
+                <div class="ut-card-title">F&O Telemetry (Nifty / Banknifty / Sensex)</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTrade">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWin">₹0</div></div>
@@ -430,7 +430,12 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Equity Performance Telemetry</div>
+                <div class="ut-card-title">F&O Equity Curve</div>
+                <div style="height: 280px; width: 100%;"><canvas id="fnoChart"></canvas></div>
+            </div>
+
+            <div class="ut-card">
+                <div class="ut-card-title">Equity Telemetry</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="lbl">Avg Trade</div><div class="val" id="statAvgTradeEq">₹0</div></div>
                     <div class="stat-item"><div class="lbl">Avg Win</div><div class="val text-profit" id="statAvgWinEq">₹0</div></div>
@@ -449,7 +454,7 @@
 
             <div class="ut-card">
                 <div class="ut-card-title">Equity Curve</div>
-                <div style="height: 280px; width: 100%;"><canvas id="mainChart"></canvas></div>
+                <div style="height: 280px; width: 100%;"><canvas id="eqChart"></canvas></div>
             </div>
 
             <div class="ut-card">
@@ -458,7 +463,7 @@
             </div>
 
             <div class="ut-card">
-                <div class="ut-card-title">Monthly P/L</div>
+                <div class="ut-card-title">Monthly Net Portfolio P/L</div>
                 <div style="height: 220px; width: 100%;"><canvas id="monthlyPnlChart"></canvas></div>
             </div>
 
@@ -491,16 +496,15 @@
     let selectedStrategy = 'Default';
     let customStrategies = {};
     
-    // YOUR GOOGLE SHEETS API
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
 
     let curDate = new Date();
-    let chart1, chart2, chart3, gaugeWin, gaugePf;
+    let chartFno, chartEq, chart2, chart3, gaugeWin, gaugePf;
     const tooltip = document.getElementById('iosTooltip');
 
     document.getElementById('dateInput').valueAsDate = curDate;
 
-    Chart.defaults.font.family = "'Inter', sans-serif"; 
+    Chart.defaults.font.family = "'JetBrains Mono', monospace"; 
     Chart.defaults.color = '#71717a';
     Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(20,20,21,0.9)';
     Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
@@ -691,7 +695,6 @@
         hasAnimatedTopMetrics = true; 
     }
 
-    // --- RENDER FUNCTIONS ---
     function renderTradeLogUI() {
         const instContainer = document.getElementById('instrumentChips'); instContainer.innerHTML = '';
         INSTRUMENTS.forEach(inst => {
@@ -927,21 +930,23 @@
     }
 
     function renderCharts() {
-        const globalDateMap = {}; 
-        trades.forEach(t => globalDateMap[t.date] = (globalDateMap[t.date] || 0) + t.pnl);
-
-        const globalDates = Object.keys(globalDateMap).sort();
-        let eq = [], cum = 0;
-        globalDates.forEach(d => { cum += globalDateMap[d]; eq.push(cum); });
         
-        const ctx1 = document.getElementById('mainChart').getContext('2d');
-        if(chart1) chart1.destroy();
-        chart1 = new Chart(ctx1, { 
+        // --- 1. F&O Line Chart ---
+        const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
+        const fnoDateMap = {}; 
+        fnoTrades.forEach(t => fnoDateMap[t.date] = (fnoDateMap[t.date] || 0) + t.pnl);
+        const fnoDates = Object.keys(fnoDateMap).sort();
+        let fnoEq = [], fnoCum = 0;
+        fnoDates.forEach(d => { fnoCum += fnoDateMap[d]; fnoEq.push(fnoCum); });
+        
+        const ctxFno = document.getElementById('fnoChart').getContext('2d');
+        if(chartFno) chartFno.destroy();
+        chartFno = new Chart(ctxFno, { 
             type: 'line', 
             data: { 
-                labels: globalDates, 
+                labels: fnoDates, 
                 datasets: [{ 
-                    label: 'Net Equity', data: eq, borderWidth: 2, 
+                    label: 'F&O Equity', data: fnoEq, borderWidth: 2, 
                     fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.1)', below: 'rgba(244, 63, 94, 0.1)' },
                     segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
                     pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
@@ -954,6 +959,35 @@
             } 
         });
 
+        // --- 2. Equity Line Chart ---
+        const eqTradesList = trades.filter(t => t.instrument === 'Equity');
+        const eqDateMap = {}; 
+        eqTradesList.forEach(t => eqDateMap[t.date] = (eqDateMap[t.date] || 0) + t.pnl);
+        const eqDates = Object.keys(eqDateMap).sort();
+        let eqLine = [], eqCum = 0;
+        eqDates.forEach(d => { eqCum += eqDateMap[d]; eqLine.push(eqCum); });
+        
+        const ctxEq = document.getElementById('eqChart').getContext('2d');
+        if(chartEq) chartEq.destroy();
+        chartEq = new Chart(ctxEq, { 
+            type: 'line', 
+            data: { 
+                labels: eqDates, 
+                datasets: [{ 
+                    label: 'Cash Equity', data: eqLine, borderWidth: 2, 
+                    fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.1)', below: 'rgba(244, 63, 94, 0.1)' },
+                    segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
+                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
+                }] 
+            }, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} } },
+                interaction: { mode: 'index', intersect: false }
+            } 
+        });
+
+        // --- 3. Monthly Daily P/L Bar Chart (Current Calendar Month) ---
         const y = curDate.getFullYear(), m = curDate.getMonth(), daysInMonth = new Date(y, m + 1, 0).getDate(), monthPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
         const monthLabels = [], monthData = [];
         for(let i = 1; i <= daysInMonth; i++) {
@@ -975,6 +1009,7 @@
             }
         });
 
+        // --- 4. Monthly P/L Aggregate Chart (Chronological) ---
         const monthlyAggMap = {};
         trades.forEach(t => { const ym = t.date.substring(0, 7); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + t.pnl; });
         if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) { const ym = k.replace('CHARGE_', ''); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0); } }
@@ -1087,6 +1122,7 @@
             h += '</div>'; 
         } else { h += '<div style="text-align:center; color:var(--text-muted); font-size:14px; margin-bottom:24px; padding:30px 20px; background:rgba(0,0,0,0.3); border-radius:var(--radius-md);">No executions found for this date.</div>'; }
         document.getElementById('modalContent').innerHTML = h; 
+
         const noteVal = notesData[d] || '';
         document.getElementById('noteSection').innerHTML = `
             <div>
