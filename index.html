@@ -170,7 +170,7 @@
         input:checked + .slider { background-color: var(--brand-solid); border-color: var(--brand-solid); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
         input:checked + .slider:before { transform: translateX(18px); background-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.8); }
 
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .cal-title { font-size: 16px; font-weight: 600; transition: text-shadow 0.3s; }
         .cal-header:hover .cal-title { text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         .cal-nav-group { display: flex; gap: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 4px; transition: 0.3s; }
@@ -178,16 +178,6 @@
         .cal-btn { background: transparent; border: none; color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .cal-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); transform: scale(1.1); }
         
-        /* Calendar Filter Styling */
-        .cal-filter-wrap { display: flex; gap: 10px; margin-bottom: 20px; }
-        .cal-filter-select {
-            background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-secondary);
-            border-radius: var(--radius-sm); padding: 8px 12px; font-family: var(--font-sans); font-size: 12px;
-            outline: none; cursor: pointer; transition: all 0.2s ease; flex: 1; -webkit-appearance: none; appearance: none;
-        }
-        .cal-filter-select:hover, .cal-filter-select:focus { border-color: rgba(255,255,255,0.3); color: var(--text-primary); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
-        .cal-filter-select option { background: #141415; color: #fff; }
-
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day-name { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; }
         
@@ -368,31 +358,37 @@
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
             <div class="ut-card">
-                <div class="cal-header">
+                <div class="cal-header" style="margin-bottom: 16px;">
                     <div class="cal-title" id="calMonthYear">Month</div>
                     <div class="cal-nav-group">
                         <button class="cal-btn" onclick="moveMonth(-1)">‹</button>
                         <button class="cal-btn" onclick="moveMonth(1)">›</button>
                     </div>
                 </div>
-                
-                <div class="cal-filter-wrap">
-                    <select id="calFilterInst" class="cal-filter-select" onchange="renderCalendar()">
-                        <option value="All">All Instruments</option>
-                        <option value="Nifty">Nifty</option>
-                        <option value="Banknifty">Banknifty</option>
-                        <option value="Sensex">Sensex</option>
-                        <option value="Equity">Equity</option>
-                        <option value="Commodity">Commodity</option>
-                    </select>
-                    <select id="calFilterDay" class="cal-filter-select" onchange="renderCalendar()">
-                        <option value="All">All Days</option>
-                        <option value="1">Monday</option>
-                        <option value="2">Tuesday</option>
-                        <option value="3">Wednesday</option>
-                        <option value="4">Thursday</option>
-                        <option value="5">Friday</option>
-                    </select>
+
+                <div style="margin-bottom: 24px;">
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px;">FILTER INSTRUMENTS</div>
+                            <div class="pill-group">
+                                <button class="pill active" onclick="toggleCalFilter('inst', 'Nifty', this)">Nifty</button>
+                                <button class="pill active" onclick="toggleCalFilter('inst', 'Banknifty', this)">Banknifty</button>
+                                <button class="pill active" onclick="toggleCalFilter('inst', 'Sensex', this)">Sensex</button>
+                                <button class="pill active" onclick="toggleCalFilter('inst', 'Equity', this)">Equity</button>
+                                <button class="pill active" onclick="toggleCalFilter('inst', 'Commodity', this)">Commodity</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px;">FILTER DAYS</div>
+                            <div class="pill-group">
+                                <button class="pill active" onclick="toggleCalFilter('day', '1', this)">Mon</button>
+                                <button class="pill active" onclick="toggleCalFilter('day', '2', this)">Tue</button>
+                                <button class="pill active" onclick="toggleCalFilter('day', '3', this)">Wed</button>
+                                <button class="pill active" onclick="toggleCalFilter('day', '4', this)">Thu</button>
+                                <button class="pill active" onclick="toggleCalFilter('day', '5', this)">Fri</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="cal-grid" id="calGrid"></div>
@@ -524,6 +520,10 @@
     let selectedTradeType = 'My Algo';
     let selectedStrategy = 'Default';
     let customStrategies = {};
+
+    // Multi-Select Calendar Filter State
+    let calFilterInst = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
+    let calFilterDay = ['1', '2', '3', '4', '5'];
     
     const API_URL = 'https://script.google.com/macros/s/AKfycbxf6ZSSftEk7VsZW3IsTMD0Ug2VYKSNcYZBWV7NFKeGrI7qVwttfzrn27UzhkOK_IhB/exec';
 
@@ -699,6 +699,18 @@
     function toggleCharges() { isChargesOn = document.getElementById('chargesToggle').checked; updateUI(); }
     function toggleDividends() { isDividendsOn = document.getElementById('dividendsToggle').checked; updateUI(); }
 
+    function toggleCalFilter(type, val, btn) {
+        let arr = type === 'inst' ? calFilterInst : calFilterDay;
+        if (arr.includes(val)) {
+            arr.splice(arr.indexOf(val), 1);
+            btn.classList.remove('active');
+        } else {
+            arr.push(val);
+            btn.classList.add('active');
+        }
+        renderCalendar();
+    }
+
     function updateMonthlyInputsUI() {
         document.getElementById('chargesToggle').checked = isChargesOn;
         document.getElementById('dividendsToggle').checked = isDividendsOn;
@@ -796,6 +808,7 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
+        // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
         else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
         else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
@@ -1055,25 +1068,23 @@
         });
     }
 
-    function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); updateUI(); }
+    function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); renderCalendar(); } // Only render calendar on month change
     
     function renderCalendar() {
         const y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
         
-        // Grab filter values
-        const instFilter = document.getElementById('calFilterInst').value;
-        const dayFilter = document.getElementById('calFilterDay').value;
-
-        // Create a filtered subset of trades strictly for calendar display
+        // Multi-Select Filtering Logic
         const calFilteredTrades = trades.filter(t => {
-            let instMatch = (instFilter === 'All') || (t.instrument === instFilter);
-            let dayMatch = (dayFilter === 'All');
-            if (!dayMatch) {
+            let instMatch = calFilterInst.length === 0 || calFilterInst.includes(t.instrument);
+            let dayMatch = false;
+            if (calFilterDay.length === 0) {
+                dayMatch = true;
+            } else {
                 const parts = t.date.split('-');
                 if (parts.length === 3) {
                     const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    if (d.getDay().toString() === dayFilter) dayMatch = true;
+                    if (calFilterDay.includes(d.getDay().toString())) dayMatch = true;
                 }
             }
             return instMatch && dayMatch;
@@ -1084,7 +1095,6 @@
         
         const fDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
         
-        // Calculate maxWin and maxLoss using ONLY the filtered trades
         let maxWin = 0, maxLoss = 0;
         for(let i = 1; i <= days; i++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -1098,11 +1108,9 @@
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             const dateObj = new Date(y, m, i), isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
             
-            // Base the day's PNL purely on the filtered set
             const dayTrades = calFilteredTrades.filter(t => t.date === dateStr);
             const pnl = dayTrades.reduce((a,b)=>a+b.pnl,0);
             
-            // To ensure clicking a cell opens all trades for context (or just filtered? Let's stick to filtered for accuracy)
             const el = document.createElement('div'); el.className = 'cal-cell';
             el.onclick = () => { document.getElementById('dateInput').value = dateStr; openModal(dateStr, dayTrades); };
             if(notesData[dateStr]) { el.classList.add('has-note'); el.innerHTML += `<div class="indicator-dot"></div>`; }
