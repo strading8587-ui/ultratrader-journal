@@ -170,7 +170,7 @@
         input:checked + .slider { background-color: var(--brand-solid); border-color: var(--brand-solid); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
         input:checked + .slider:before { transform: translateX(18px); background-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.8); }
 
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .cal-title { font-size: 16px; font-weight: 600; transition: text-shadow 0.3s; }
         .cal-header:hover .cal-title { text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         .cal-nav-group { display: flex; gap: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 4px; transition: 0.3s; }
@@ -178,6 +178,16 @@
         .cal-btn { background: transparent; border: none; color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .cal-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); transform: scale(1.1); }
         
+        /* Calendar Filter Styling */
+        .cal-filter-wrap { display: flex; gap: 10px; margin-bottom: 20px; }
+        .cal-filter-select {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-secondary);
+            border-radius: var(--radius-sm); padding: 8px 12px; font-family: var(--font-sans); font-size: 12px;
+            outline: none; cursor: pointer; transition: all 0.2s ease; flex: 1; -webkit-appearance: none; appearance: none;
+        }
+        .cal-filter-select:hover, .cal-filter-select:focus { border-color: rgba(255,255,255,0.3); color: var(--text-primary); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
+        .cal-filter-select option { background: #141415; color: #fff; }
+
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day-name { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; }
         
@@ -221,7 +231,6 @@
         .tt-date { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .tt-val { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
 
-        /* Insights Card Styles */
         .insight-bullet { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         .insight-bullet:last-child { margin-bottom: 0; }
         .insight-icon { font-size: 16px; }
@@ -366,6 +375,26 @@
                         <button class="cal-btn" onclick="moveMonth(1)">›</button>
                     </div>
                 </div>
+                
+                <div class="cal-filter-wrap">
+                    <select id="calFilterInst" class="cal-filter-select" onchange="renderCalendar()">
+                        <option value="All">All Instruments</option>
+                        <option value="Nifty">Nifty</option>
+                        <option value="Banknifty">Banknifty</option>
+                        <option value="Sensex">Sensex</option>
+                        <option value="Equity">Equity</option>
+                        <option value="Commodity">Commodity</option>
+                    </select>
+                    <select id="calFilterDay" class="cal-filter-select" onchange="renderCalendar()">
+                        <option value="All">All Days</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                    </select>
+                </div>
+
                 <div class="cal-grid" id="calGrid"></div>
             </div>
 
@@ -767,7 +796,6 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
-        // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
         else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
         else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
@@ -894,7 +922,6 @@
 
         let insights = [];
 
-        // 1. Best Day of Week
         let dayMap = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         trades.forEach(t => { const d = new Date(t.date).getDay(); dayMap[d] += t.pnl; });
@@ -902,7 +929,6 @@
         for (let i=1; i<=5; i++) { if (dayMap[i] > maxDayPnl) { maxDayPnl = dayMap[i]; bestDay = i; } }
         if (maxDayPnl > 0) insights.push(`<div class="insight-bullet"><span class="insight-icon">📅</span><span><strong>${dayNames[bestDay]}s</strong> are your most profitable days (₹${maxDayPnl.toLocaleString()}).</span></div>`);
 
-        // 2. Best/Worst Instrument
         let instMap = {};
         trades.forEach(t => { instMap[t.instrument] = (instMap[t.instrument]||0) + t.pnl; });
         let bestInst = '', maxInstPnl = -Infinity, worstInst = '', minInstPnl = Infinity;
@@ -913,7 +939,6 @@
         if (maxInstPnl > 0 && bestInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">🔥</span><span><strong>${bestInst}</strong> is your top performing instrument (₹${maxInstPnl.toLocaleString()}). Keep exploiting this edge.</span></div>`);
         if (minInstPnl < 0 && worstInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">⚠️</span><span><strong>${worstInst}</strong> is bleeding capital (₹${Math.abs(minInstPnl).toLocaleString()} loss). Consider reviewing your strategy or sizing down.</span></div>`);
 
-        // 3. Current Global Streak
         const sortedTrades = [...trades].sort((a,b) => new Date(a.date) - new Date(b.date));
         let curVal = 0, curType = null;
         sortedTrades.forEach(t => {
@@ -931,7 +956,6 @@
 
     function renderCharts() {
         
-        // --- 1. F&O Line Chart ---
         const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
         const fnoDateMap = {}; 
         fnoTrades.forEach(t => fnoDateMap[t.date] = (fnoDateMap[t.date] || 0) + t.pnl);
@@ -959,7 +983,6 @@
             } 
         });
 
-        // --- 2. Equity Line Chart ---
         const eqTradesList = trades.filter(t => t.instrument === 'Equity');
         const eqDateMap = {}; 
         eqTradesList.forEach(t => eqDateMap[t.date] = (eqDateMap[t.date] || 0) + t.pnl);
@@ -987,7 +1010,6 @@
             } 
         });
 
-        // --- 3. Monthly Daily P/L Bar Chart (Current Calendar Month) ---
         const y = curDate.getFullYear(), m = curDate.getMonth(), daysInMonth = new Date(y, m + 1, 0).getDate(), monthPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
         const monthLabels = [], monthData = [];
         for(let i = 1; i <= daysInMonth; i++) {
@@ -1009,7 +1031,6 @@
             }
         });
 
-        // --- 4. Monthly P/L Aggregate Chart (Chronological) ---
         const monthlyAggMap = {};
         trades.forEach(t => { const ym = t.date.substring(0, 7); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + t.pnl; });
         if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) { const ym = k.replace('CHARGE_', ''); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0); } }
@@ -1040,14 +1061,34 @@
         const y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
         
+        // Grab filter values
+        const instFilter = document.getElementById('calFilterInst').value;
+        const dayFilter = document.getElementById('calFilterDay').value;
+
+        // Create a filtered subset of trades strictly for calendar display
+        const calFilteredTrades = trades.filter(t => {
+            let instMatch = (instFilter === 'All') || (t.instrument === instFilter);
+            let dayMatch = (dayFilter === 'All');
+            if (!dayMatch) {
+                const parts = t.date.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    if (d.getDay().toString() === dayFilter) dayMatch = true;
+                }
+            }
+            return instMatch && dayMatch;
+        });
+
         const grid = document.getElementById('calGrid'); grid.innerHTML = ''; 
         ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
         
         const fDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
+        
+        // Calculate maxWin and maxLoss using ONLY the filtered trades
         let maxWin = 0, maxLoss = 0;
         for(let i = 1; i <= days; i++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const pnl = trades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl,0);
+            const pnl = calFilteredTrades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl,0);
             if(pnl > 0) maxWin = Math.max(maxWin, pnl); if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
         }
 
@@ -1056,8 +1097,12 @@
         for(let i = 1; i <= days; i++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             const dateObj = new Date(y, m, i), isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-            const dayTrades = trades.filter(t => t.date === dateStr), pnl = dayTrades.reduce((a,b)=>a+b.pnl,0);
             
+            // Base the day's PNL purely on the filtered set
+            const dayTrades = calFilteredTrades.filter(t => t.date === dateStr);
+            const pnl = dayTrades.reduce((a,b)=>a+b.pnl,0);
+            
+            // To ensure clicking a cell opens all trades for context (or just filtered? Let's stick to filtered for accuracy)
             const el = document.createElement('div'); el.className = 'cal-cell';
             el.onclick = () => { document.getElementById('dateInput').value = dateStr; openModal(dateStr, dayTrades); };
             if(notesData[dateStr]) { el.classList.add('has-note'); el.innerHTML += `<div class="indicator-dot"></div>`; }
@@ -1120,7 +1165,7 @@
                     </div></div>`;
             }); 
             h += '</div>'; 
-        } else { h += '<div style="text-align:center; color:var(--text-muted); font-size:14px; margin-bottom:24px; padding:30px 20px; background:rgba(0,0,0,0.3); border-radius:var(--radius-md);">No executions found for this date.</div>'; }
+        } else { h += '<div style="text-align:center; color:var(--text-muted); font-size:14px; margin-bottom:24px; padding:30px 20px; background:rgba(0,0,0,0.3); border-radius:var(--radius-md);">No executions found for this filter/date.</div>'; }
         document.getElementById('modalContent').innerHTML = h; 
 
         const noteVal = notesData[d] || '';
