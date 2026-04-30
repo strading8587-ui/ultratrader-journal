@@ -179,6 +179,16 @@
         .cal-btn { background: transparent; border: none; color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .cal-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); transform: scale(1.1); }
         
+        /* Calendar Filter Styling */
+        .cal-filter-wrap { display: flex; gap: 10px; margin-bottom: 20px; }
+        .cal-filter-select {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-secondary);
+            border-radius: var(--radius-sm); padding: 8px 12px; font-family: var(--font-sans); font-size: 12px;
+            outline: none; cursor: pointer; transition: all 0.2s ease; flex: 1; -webkit-appearance: none; appearance: none;
+        }
+        .cal-filter-select:hover, .cal-filter-select:focus { border-color: rgba(255,255,255,0.3); color: var(--text-primary); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
+        .cal-filter-select option { background: #141415; color: #fff; }
+
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day-name { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; }
         
@@ -428,28 +438,6 @@
                 </div>
             </div>
 
-            <!-- Dividends Section -->
-            <div class="ut-card">
-                <div class="ut-card-title" style="margin-bottom: 16px;">
-                    <div>Dividends Received</div>
-                    <label class="switch">
-                        <input type="checkbox" id="dividendsToggle" onchange="toggleDividends()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div style="display:flex; gap:12px; align-items:flex-end;">
-                    <div class="form-group" style="margin-bottom:0; flex:1;">
-                        <span class="form-label">Month</span>
-                        <input type="month" id="dividendMonth">
-                    </div>
-                    <div class="form-group" style="margin-bottom:0; flex:1;">
-                        <span class="form-label">Amount (₹)</span>
-                        <input type="number" id="dividendInputAmount" placeholder="0.00" step="0.01">
-                    </div>
-                    <button class="btn-ghost" style="height: 48px; padding: 0 20px; border-color: var(--profit); color: var(--profit);" onclick="saveDividendEntry()">Save</button>
-                </div>
-            </div>
-
             <!-- Performance Telemetry Section (Indices) -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Telemetry (Nifty / Banknifty / Sensex)</div>
@@ -533,7 +521,6 @@
     
     // Check LocalStorage for saved toggle states
     let isChargesOn = localStorage.getItem('rockybull_charges_on') === 'true';
-    let isDividendsOn = localStorage.getItem('rockybull_dividends_on') === 'true';
     
     let hasAnimatedTopMetrics = false; 
     
@@ -628,7 +615,8 @@
             notesData = {}; customStrategies = {};
             if (data.notes) {
                 for (let key in data.notes) {
-                    if(key.startsWith('CHARGE_') || key.startsWith('DIVIDEND_')) notesData[key] = data.notes[key];
+                    if(key.startsWith('CHARGE_')) notesData[key] = data.notes[key];
+                    else if(key.startsWith('DIVIDEND_')) continue; // Discard any old dividend data
                     else if(key.startsWith('STRATS_')) customStrategies[key.replace('STRATS_', '')] = data.notes[key].split('|||');
                     else notesData[normalizeDateStr(key)] = data.notes[key];
                 }
@@ -667,13 +655,6 @@
         const ym = document.getElementById('chargeMonth').value, amt = document.getElementById('chargeInputAmount').value;
         if(!ym) return; const updatedNotes = { ...notesData };
         if(amt === "" || isNaN(amt)) delete updatedNotes['CHARGE_' + ym]; else updatedNotes['CHARGE_' + ym] = parseFloat(amt);
-        await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet();
-    }
-
-    async function saveDividendEntry() {
-        const ym = document.getElementById('dividendMonth').value, amt = document.getElementById('dividendInputAmount').value;
-        if(!ym) return; const updatedNotes = { ...notesData };
-        if(amt === "" || isNaN(amt)) delete updatedNotes['DIVIDEND_' + ym]; else updatedNotes['DIVIDEND_' + ym] = parseFloat(amt);
         await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet();
     }
 
@@ -724,12 +705,6 @@
         localStorage.setItem('rockybull_charges_on', isChargesOn);
         updateUI(); 
     }
-    
-    function toggleDividends() { 
-        isDividendsOn = document.getElementById('dividendsToggle').checked; 
-        localStorage.setItem('rockybull_dividends_on', isDividendsOn);
-        updateUI(); 
-    }
 
     function toggleCalFilter(type, val, btn) {
         let arr = type === 'inst' ? calFilterInst : calFilterDay;
@@ -745,16 +720,12 @@
 
     function updateMonthlyInputsUI() {
         document.getElementById('chargesToggle').checked = isChargesOn;
-        document.getElementById('dividendsToggle').checked = isDividendsOn;
         const y = curDate.getFullYear(), m = String(curDate.getMonth() + 1).padStart(2, '0'), ym = `${y}-${m}`;
         document.getElementById('chargeMonth').value = ym;
         document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + ym] || '';
-        document.getElementById('dividendMonth').value = ym;
-        document.getElementById('dividendInputAmount').value = notesData['DIVIDEND_' + ym] || '';
     }
 
     document.getElementById('chargeMonth').addEventListener('change', (e) => { document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + e.target.value] || ''; });
-    document.getElementById('dividendMonth').addEventListener('change', (e) => { document.getElementById('dividendInputAmount').value = notesData['DIVIDEND_' + e.target.value] || ''; });
 
     function updateUI() { 
         updateMonthlyInputsUI();
@@ -831,14 +802,13 @@
         }
         
         const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
-        let totalCharges = 0, totalDividends = 0;
+        let totalCharges = 0;
         
         if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0; }
-        if(isDividendsOn) { for(let k in notesData) if(k.startsWith('DIVIDEND_')) totalDividends += parseFloat(notesData[k]) || 0; }
         
-        const displayPnl = grossPnl - totalCharges + totalDividends;
+        const displayPnl = grossPnl - totalCharges;
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
-        document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
+        document.getElementById('pnlLabel').innerText = (isChargesOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
         // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
@@ -1079,7 +1049,6 @@
         const monthlyAggMap = {};
         trades.forEach(t => { const ym = t.date.substring(0, 7); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + t.pnl; });
         if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) { const ym = k.replace('CHARGE_', ''); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0); } }
-        if(isDividendsOn) { for(let k in notesData) if(k.startsWith('DIVIDEND_')) { const ym = k.replace('DIVIDEND_', ''); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + (parseFloat(notesData[k]) || 0); } }
 
         const sortedAggMonths = Object.keys(monthlyAggMap).sort();
         const aggMonthLabels = sortedAggMonths.map(ym => new Date(ym + '-01').toLocaleString('default', { month: 'short', year: '2-digit' }));
