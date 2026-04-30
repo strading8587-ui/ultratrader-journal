@@ -8,6 +8,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- JetBrains Mono for Terminal Math UI -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -234,6 +235,7 @@
 
 <div class="container">
 
+    <!-- Global Top Widgets -->
     <div class="metrics-row">
         <div class="metric-widget">
             <div class="metric-info">
@@ -268,6 +270,7 @@
         </div>
     </div>
 
+    <!-- Smart Insights Engine -->
     <div class="ut-card" style="margin-bottom: 24px; padding: 20px;">
         <div class="ut-card-title" style="margin-bottom: 12px; color: var(--brand-solid);">Smart Insights 🧠</div>
         <div id="insightsBox">
@@ -279,6 +282,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
+            <!-- Log New Trade -->
             <div class="ut-card">
                 <div class="ut-card-title">Log New Trade</div>
                 
@@ -313,6 +317,7 @@
                 <button class="btn-gradient" onclick="addTrade()">Save Trade</button>
             </div>
 
+            <!-- Day Wise Algo P/L Section -->
             <div class="ut-card">
                 <div class="ut-card-title">DAY WISE ALGO P/L</div>
                 <div style="display: flex; flex-direction: column;">
@@ -324,6 +329,7 @@
                 </div>
             </div>
 
+            <!-- Import/Export Data -->
             <div class="ut-card" style="padding: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap:8px;">
@@ -335,6 +341,7 @@
                 </div>
             </div>
 
+            <!-- Custom Report Builder -->
             <div class="ut-card">
                 <div class="ut-card-title">Custom Report Builder</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -357,6 +364,7 @@
 
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
+            <!-- Calendar Section with Filters and Dynamic Sum Pill -->
             <div class="ut-card">
                 <div class="cal-header" style="margin-bottom: 16px;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -369,6 +377,7 @@
                     </div>
                 </div>
 
+                <!-- Dynamic Multi-Select Filters for the Heatmap -->
                 <div style="margin-bottom: 24px;">
                     <div style="display:flex; flex-direction:column; gap:16px;">
                         <div>
@@ -397,6 +406,7 @@
                 <div class="cal-grid" id="calGrid"></div>
             </div>
 
+            <!-- Other Charges Section -->
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
                     <div>Other Charges & Fees</div>
@@ -418,6 +428,7 @@
                 </div>
             </div>
 
+            <!-- Dividends Section -->
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
                     <div>Dividends Received</div>
@@ -439,6 +450,7 @@
                 </div>
             </div>
 
+            <!-- Performance Telemetry Section (Indices) -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Telemetry (Nifty / Banknifty / Sensex)</div>
                 <div class="stats-grid">
@@ -457,11 +469,13 @@
                 </div>
             </div>
 
+            <!-- F&O Equity Curve -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="fnoChart"></canvas></div>
             </div>
 
+            <!-- Equity Performance Telemetry Section -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Telemetry</div>
                 <div class="stats-grid">
@@ -480,16 +494,19 @@
                 </div>
             </div>
 
+            <!-- Equity Curve Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="eqChart"></canvas></div>
             </div>
 
+            <!-- Separated Daily P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Daily P/L (Current Month)</div>
                 <div style="height: 220px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
             </div>
 
+            <!-- Monthly P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Monthly Net Portfolio P/L</div>
                 <div style="height: 220px; width: 100%;"><canvas id="monthlyPnlChart"></canvas></div>
@@ -513,8 +530,11 @@
 <script>
     let trades = [];
     let notesData = {};
-    let isChargesOn = false;
-    let isDividendsOn = false;
+    
+    // Check LocalStorage for saved toggle states
+    let isChargesOn = localStorage.getItem('rockybull_charges_on') === 'true';
+    let isDividendsOn = localStorage.getItem('rockybull_dividends_on') === 'true';
+    
     let hasAnimatedTopMetrics = false; 
     
     const INSTRUMENTS = ['Nifty', 'Banknifty', 'Sensex', 'Equity', 'Commodity'];
@@ -699,8 +719,17 @@
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rocky_bull_backup.json'; a.click();
     }
 
-    function toggleCharges() { isChargesOn = document.getElementById('chargesToggle').checked; updateUI(); }
-    function toggleDividends() { isDividendsOn = document.getElementById('dividendsToggle').checked; updateUI(); }
+    function toggleCharges() { 
+        isChargesOn = document.getElementById('chargesToggle').checked; 
+        localStorage.setItem('rockybull_charges_on', isChargesOn);
+        updateUI(); 
+    }
+    
+    function toggleDividends() { 
+        isDividendsOn = document.getElementById('dividendsToggle').checked; 
+        localStorage.setItem('rockybull_dividends_on', isDividendsOn);
+        updateUI(); 
+    }
 
     function toggleCalFilter(type, val, btn) {
         let arr = type === 'inst' ? calFilterInst : calFilterDay;
@@ -811,6 +840,7 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn || isDividendsOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
+        // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
         else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
         else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
@@ -1097,7 +1127,7 @@
         const fDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
         
         let maxWin = 0, maxLoss = 0;
-        let currentMonthSum = 0; // Added sum logic
+        let currentMonthSum = 0; 
         
         for(let i = 1; i <= days; i++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -1107,7 +1137,6 @@
             currentMonthSum += pnl; 
         }
 
-        // Color and update the Filter Sum Pill
         const sumEl = document.getElementById('calMonthSum');
         sumEl.innerText = `${currentMonthSum >= 0 ? '' : '-'}₹${Math.abs(currentMonthSum).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
         if(currentMonthSum > 0) {
