@@ -198,6 +198,7 @@
             aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-family: var(--font-mono); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
             background: rgba(0,0,0,0.3); color: var(--text-secondary); border-radius: var(--radius-md); border: 1px solid transparent;
+            user-select: none; /* prevents text selection on double click */
         }
         .cal-cell:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: var(--text-primary); transform: scale(1.05); z-index: 10; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .cal-cell.weekend { opacity: 0.3; }
@@ -606,7 +607,6 @@
             if (data.notes) {
                 for (let key in data.notes) {
                     if(key.startsWith('CHARGE_')) notesData[key] = data.notes[key];
-                    else if(key.startsWith('DIVIDEND_')) continue; 
                     else if(key.startsWith('STRATS_')) customStrategies[key.replace('STRATS_', '')] = data.notes[key].split('|||');
                     else notesData[normalizeDateStr(key)] = data.notes[key];
                 }
@@ -673,25 +673,16 @@
 
     async function renameActiveStrategy() {
         if(selectedStrategy === 'Default') return alert("Cannot rename the Default strategy.");
-        
         const newName = prompt(`Rename "${selectedStrategy}" to:`, selectedStrategy);
         if(!newName || newName.trim() === "" || newName.trim() === selectedStrategy) return;
-        
-        const cleanName = newName.trim();
-        const mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        
+        const cleanName = newName.trim(), mapKey = `${selectedInstrument}|${selectedTradeType}`;
         if(customStrategies[mapKey].includes(cleanName)) return alert("A strategy with this name already exists!");
-        
         if(!confirm(`Rename strategy to "${cleanName}"?\n\nNote: Past trades logged under the old name will remain unchanged. This only updates your menu.`)) return;
 
         const idx = customStrategies[mapKey].indexOf(selectedStrategy);
-        if(idx !== -1) { customStrategies[mapKey][idx] = cleanName; }
-        
+        if(idx !== -1) customStrategies[mapKey][idx] = cleanName;
         selectedStrategy = cleanName; 
-        
-        const updatedNotes = { ...notesData };
-        updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-        
+        const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
         renderTradeLogUI(); 
         try { await apiPost('saveNotes', { notes: updatedNotes }); } catch(e) { alert("Failed to sync renamed strategy to server."); }
     }
@@ -831,7 +822,6 @@
         pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
         document.getElementById('pnlLabel').innerText = (isChargesOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
 
-        // Dynamic Environmental Mood Lighting
         if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
         else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
         else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
@@ -1153,7 +1143,11 @@
             const pnl = dayTrades.reduce((a,b)=>a+b.pnl,0);
             
             const el = document.createElement('div'); el.className = 'cal-cell';
-            el.onclick = () => { document.getElementById('dateInput').value = dateStr; openModal(dateStr, dayTrades); };
+            
+            // UX UPDATE: Single click sets date, Double click opens modal
+            el.onclick = () => { document.getElementById('dateInput').value = dateStr; };
+            el.ondblclick = () => { openModal(dateStr, dayTrades); };
+
             if(notesData[dateStr]) { el.classList.add('has-note'); el.innerHTML += `<div class="indicator-dot"></div>`; }
             
             if(dayTrades.length > 0) {
