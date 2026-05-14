@@ -8,6 +8,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- JetBrains Mono for Terminal Math UI -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -248,6 +249,7 @@
 
 <div class="container">
 
+    <!-- Global Top Widgets -->
     <div class="metrics-row">
         <div class="metric-widget">
             <div class="metric-info">
@@ -282,6 +284,7 @@
         </div>
     </div>
 
+    <!-- Smart Insights Engine -->
     <div class="ut-card" style="margin-bottom: 24px; padding: 20px;">
         <div class="ut-card-title" style="margin-bottom: 12px; color: var(--brand-solid);">Smart Insights 🧠</div>
         <div id="insightsBox">
@@ -293,6 +296,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
+            <!-- Log New Trade -->
             <div class="ut-card">
                 <div class="ut-card-title">Log New Trade</div>
                 
@@ -330,6 +334,7 @@
                 <button class="btn-gradient" onclick="addTrade()">Save Trade</button>
             </div>
 
+            <!-- Day Wise Algo P/L Section -->
             <div class="ut-card">
                 <div class="ut-card-title">DAY WISE ALGO P/L</div>
                 <div style="display: flex; flex-direction: column;">
@@ -341,6 +346,7 @@
                 </div>
             </div>
 
+            <!-- Import/Export Data -->
             <div class="ut-card" style="padding: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap:8px;">
@@ -352,6 +358,7 @@
                 </div>
             </div>
 
+            <!-- Custom Report Builder -->
             <div class="ut-card">
                 <div class="ut-card-title">Custom Report Builder</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -374,6 +381,7 @@
 
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
+            <!-- Calendar Section with Filters and Dynamic Sum Pill -->
             <div class="ut-card">
                 <div class="cal-header" style="margin-bottom: 16px;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -386,6 +394,7 @@
                     </div>
                 </div>
 
+                <!-- Dynamic Multi-Select Filters for the Heatmap -->
                 <div style="margin-bottom: 24px;">
                     <div style="display:flex; flex-direction:column; gap:16px;">
                         <div>
@@ -414,6 +423,7 @@
                 <div class="cal-grid" id="calGrid"></div>
             </div>
 
+            <!-- Other Charges Section -->
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
                     <div>Other Charges & Fees</div>
@@ -435,6 +445,7 @@
                 </div>
             </div>
 
+            <!-- Performance Telemetry Section (Indices) -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Telemetry (Nifty / Banknifty / Sensex)</div>
                 <div class="stats-grid">
@@ -453,11 +464,13 @@
                 </div>
             </div>
 
+            <!-- F&O Equity Curve -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="fnoChart"></canvas></div>
             </div>
 
+            <!-- Equity Performance Telemetry Section -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Telemetry</div>
                 <div class="stats-grid">
@@ -476,16 +489,19 @@
                 </div>
             </div>
 
+            <!-- Equity Curve Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="eqChart"></canvas></div>
             </div>
 
+            <!-- Separated Daily P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Daily P/L (Current Month)</div>
                 <div style="height: 220px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
             </div>
 
+            <!-- Monthly P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Monthly Net Portfolio P/L</div>
                 <div style="height: 220px; width: 100%;"><canvas id="monthlyPnlChart"></canvas></div>
@@ -1144,7 +1160,6 @@
             
             const el = document.createElement('div'); el.className = 'cal-cell';
             
-            // UX UPDATE: Single click sets date, Double click opens modal
             el.onclick = () => { document.getElementById('dateInput').value = dateStr; };
             el.ondblclick = () => { openModal(dateStr, dayTrades); };
 
@@ -1180,12 +1195,31 @@
             bd[stratName] = (bd[stratName]||0) + t.pnl; instBd[t.instrument] = (instBd[t.instrument]||0) + t.pnl;
         });
 
+        // Add Charges back into the report
+        const startM = s.substring(0, 7);
+        const endM = e.substring(0, 7);
+
+        if(isChargesOn) {
+            let reportCharges = 0;
+            for(let k in notesData) {
+                if(k.startsWith('CHARGE_')) {
+                    const m = k.replace('CHARGE_', '');
+                    if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]) || 0;
+                }
+            }
+            if(reportCharges > 0) {
+                tot -= reportCharges;
+                bd['Other Charges & Fees'] = -reportCharges;
+                instBd['Other Charges & Fees'] = -reportCharges;
+            }
+        }
+
         const totEl = document.getElementById('repTotal');
         totEl.innerText = `₹${tot.toLocaleString()}`; totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
         
         let h = ''; 
         for(let k in bd) h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
-        if(Object.keys(bd).length === 0) h = '<div style="color:var(--text-muted); font-size:13px;">No trades in this period.</div>';
+        if(Object.keys(bd).length === 0) h = '<div style="color:var(--text-muted); font-size:13px;">No trades or charges in this period.</div>';
         document.getElementById('repBreakdown').innerHTML = h; 
 
         let hInst = '';
