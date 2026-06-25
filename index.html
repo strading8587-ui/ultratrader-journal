@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
@@ -8,7 +6,6 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- JetBrains Mono for Terminal Math UI -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -239,6 +236,55 @@
         .insight-bullet { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         .insight-bullet:last-child { margin-bottom: 0; }
         .insight-icon { font-size: 16px; }
+
+        /* --- DATA AGENT UI --- */
+        .agent-fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
+            background: var(--brand-gradient); box-shadow: var(--shadow-glow); display: flex;
+            align-items: center; justify-content: center; font-size: 24px; cursor: pointer;
+            z-index: 1000; transition: all 0.3s ease; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .agent-fab:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(139, 92, 246, 0.6); }
+        
+        .agent-window {
+            position: fixed; bottom: 100px; right: 30px; width: 360px; height: 500px; border-radius: var(--radius-lg);
+            background: rgba(15, 15, 17, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);
+            display: none; flex-direction: column; z-index: 1000; box-shadow: 0 24px 48px rgba(0,0,0,0.8);
+            transform-origin: bottom right; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .agent-header {
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex;
+            justify-content: space-between; align-items: center; font-weight: 600; font-size: 15px;
+            background: rgba(0,0,0,0.2); border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg);
+        }
+        .agent-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .agent-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .chip {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-pill);
+            padding: 6px 12px; font-size: 11px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+        }
+        .chip:hover { background: rgba(139, 92, 246, 0.2); color: #fff; border-color: var(--brand-solid); }
+        
+        .agent-input-area { padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; background: rgba(0,0,0,0.2); border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg);}
+        .agent-input { 
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-pill); 
+            padding: 10px 16px; color: white; font-family: var(--font-sans); font-size: 13px; outline: none; transition: 0.3s;
+        }
+        .agent-input:focus { border-color: var(--brand-solid); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
+        .agent-send {
+            background: var(--brand-solid); border: none; width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff;
+        }
+        .agent-send:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+        
+        .msg { padding: 10px 14px; border-radius: 14px; font-size: 13px; max-width: 85%; line-height: 1.5; word-wrap: break-word; }
+        .msg.user { align-self: flex-end; background: var(--brand-solid); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); }
+        .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 4px; color: #e4e4e7; font-family: var(--font-sans); }
+        
+        @media (max-width: 768px) {
+            .agent-window { right: 10px; bottom: 90px; width: calc(100vw - 20px); height: 400px; }
+            .agent-fab { bottom: 20px; right: 20px; width: 50px; height: 50px; }
+        }
     </style>
 </head>
 <body>
@@ -249,7 +295,6 @@
 
 <div class="container">
 
-    <!-- Global Top Widgets -->
     <div class="metrics-row">
         <div class="metric-widget">
             <div class="metric-info">
@@ -284,7 +329,6 @@
         </div>
     </div>
 
-    <!-- Smart Insights Engine -->
     <div class="ut-card" style="margin-bottom: 24px; padding: 20px;">
         <div class="ut-card-title" style="margin-bottom: 12px; color: var(--brand-solid);">Smart Insights 🧠</div>
         <div id="insightsBox">
@@ -296,7 +340,6 @@
         
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
-            <!-- Log New Trade -->
             <div class="ut-card">
                 <div class="ut-card-title">Log New Trade</div>
                 
@@ -334,7 +377,6 @@
                 <button class="btn-gradient" onclick="addTrade()">Save Trade</button>
             </div>
 
-            <!-- Day Wise Algo P/L Section -->
             <div class="ut-card">
                 <div class="ut-card-title">DAY WISE ALGO P/L</div>
                 <div style="display: flex; flex-direction: column;">
@@ -346,7 +388,6 @@
                 </div>
             </div>
 
-            <!-- Import/Export Data -->
             <div class="ut-card" style="padding: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap:8px;">
@@ -358,7 +399,6 @@
                 </div>
             </div>
 
-            <!-- Custom Report Builder -->
             <div class="ut-card">
                 <div class="ut-card-title">Custom Report Builder</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -381,7 +421,6 @@
 
         <div style="display: flex; flex-direction: column; gap: 24px;">
             
-            <!-- Calendar Section with Filters and Dynamic Sum Pill -->
             <div class="ut-card">
                 <div class="cal-header" style="margin-bottom: 16px;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -394,7 +433,6 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Multi-Select Filters for the Heatmap -->
                 <div style="margin-bottom: 24px;">
                     <div style="display:flex; flex-direction:column; gap:16px;">
                         <div>
@@ -423,7 +461,6 @@
                 <div class="cal-grid" id="calGrid"></div>
             </div>
 
-            <!-- Other Charges Section -->
             <div class="ut-card">
                 <div class="ut-card-title" style="margin-bottom: 16px;">
                     <div>Other Charges & Fees</div>
@@ -445,7 +482,6 @@
                 </div>
             </div>
 
-            <!-- Performance Telemetry Section (Indices) -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Telemetry (Nifty / Banknifty / Sensex)</div>
                 <div class="stats-grid">
@@ -464,13 +500,11 @@
                 </div>
             </div>
 
-            <!-- F&O Equity Curve -->
             <div class="ut-card">
                 <div class="ut-card-title">F&O Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="fnoChart"></canvas></div>
             </div>
 
-            <!-- Equity Performance Telemetry Section -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Telemetry</div>
                 <div class="stats-grid">
@@ -489,29 +523,50 @@
                 </div>
             </div>
 
-            <!-- Equity Curve Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Equity Curve</div>
                 <div style="height: 280px; width: 100%;"><canvas id="eqChart"></canvas></div>
             </div>
 
-            <!-- Separated Daily P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Daily P/L (Current Month)</div>
                 <div style="height: 220px; width: 100%;"><canvas id="dailyPnlChart"></canvas></div>
             </div>
 
-            <!-- Monthly P/L Card -->
             <div class="ut-card">
                 <div class="ut-card-title">Monthly Net Portfolio P/L</div>
                 <div style="height: 220px; width: 100%;"><canvas id="monthlyPnlChart"></canvas></div>
             </div>
 
         </div>
+    </div></div><div id="iosTooltip" class="ut-tooltip"></div>
+
+<div class="agent-fab" onclick="toggleAgent()">🤖</div>
+
+<div class="agent-window" id="agentWindow">
+    <div class="agent-header">
+        <div>Terminal Assistant</div>
+        <div style="cursor:pointer; color:var(--text-secondary);" onclick="toggleAgent()">✕</div>
+    </div>
+    <div class="agent-body" id="agentBody">
+        <div class="msg agent">Hello! I am your local data agent. I read directly from your trade journal. You can ask me things like:<br><br>
+            • <i>"Profit in last 7 days"</i><br>
+            • <i>"What is my best trade?"</i><br>
+            • <i>"Profit in Nifty"</i><br>
+            • <i>"Win rate"</i>
+        </div>
+        <div class="agent-chips">
+            <div class="chip" onclick="sendQuickAgent('Profit in last 7 days')">Last 7 Days</div>
+            <div class="chip" onclick="sendQuickAgent('Win rate')">Win Rate</div>
+            <div class="chip" onclick="sendQuickAgent('Best trade')">Best Trade</div>
+            <div class="chip" onclick="sendQuickAgent('Worst trade')">Worst Trade</div>
+        </div>
+    </div>
+    <div class="agent-input-area">
+        <input type="text" id="agentInput" class="agent-input" placeholder="Ask a question..." onkeypress="if(event.key === 'Enter') sendAgentMsg()">
+        <button class="agent-send" onclick="sendAgentMsg()">↑</button>
     </div>
 </div>
-
-<div id="iosTooltip" class="ut-tooltip"></div>
 
 <div class="modal-overlay" id="modal">
     <div class="modal-box">
@@ -519,10 +574,7 @@
         <h2 id="modalTitle" style="font-size:20px; font-weight:600; margin-bottom: 24px;">Details</h2>
         <div id="modalContent"></div>
         <div id="noteSection"></div>
-    </div>
-</div>
-
-<script>
+    </div></div><script>
     let trades = [];
     let notesData = {};
     
@@ -1257,10 +1309,71 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
+    // --- LOCAL DATA AGENT ---
+    function toggleAgent() {
+        const w = document.getElementById('agentWindow');
+        w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+    }
+    
+    function sendQuickAgent(msg) { 
+        document.getElementById('agentInput').value = msg; 
+        sendAgentMsg(); 
+    }
+    
+    function sendAgentMsg() {
+        const inp = document.getElementById('agentInput'); 
+        const val = inp.value.trim(); 
+        if(!val) return;
+        
+        const b = document.getElementById('agentBody');
+        b.innerHTML += `<div class="msg user">${val}</div>`; 
+        inp.value = '';
+        
+        setTimeout(() => { 
+            b.innerHTML += `<div class="msg agent">${processAgentQuery(val.toLowerCase())}</div>`; 
+            b.scrollTop = b.scrollHeight; 
+        }, 400);
+    }
+    
+    function processAgentQuery(q) {
+        if(!trades || !trades.length) return "I don't have enough data yet to answer that.";
+        
+        if (q.includes("7 days") || q.includes("seven days") || q.includes("last week")) {
+            let cutoff = new Date(); 
+            cutoff.setDate(cutoff.getDate() - 7);
+            let pnl = trades.filter(t => new Date(t.date) >= cutoff).reduce((s, t) => s + t.pnl, 0);
+            return `Your net profit in the last 7 days is <b>₹${pnl.toLocaleString('en-IN', {maximumFractionDigits:2})}</b>.`;
+        }
+        if (q.includes("best trade") || q.includes("highest profit")) {
+            let best = trades.reduce((p, c) => (p.pnl > c.pnl) ? p : c);
+            return `Your best trade was <b>${best.instrument}</b> (${best.strategy}) on ${best.date} for <b>₹${best.pnl.toLocaleString('en-IN')}</b>.`;
+        }
+        if (q.includes("worst trade") || q.includes("biggest loss")) {
+            let worst = trades.reduce((p, c) => (p.pnl < c.pnl) ? p : c);
+            return `Your worst trade was <b>${worst.instrument}</b> (${worst.strategy}) on ${worst.date} resulting in a loss of <b>₹${worst.pnl.toLocaleString('en-IN')}</b>.`;
+        }
+        if (q.includes("win rate") || q.includes("winning percentage")) {
+            let wr = Math.round((trades.filter(t => t.pnl > 0).length / trades.length) * 100);
+            return `Your overall win rate is currently <b>${wr}%</b> across all instruments.`;
+        }
+        if (q.includes("nifty") && q.includes("profit")) {
+            let n = trades.filter(t=>t.instrument==='Nifty').reduce((s,t)=>s+t.pnl,0);
+            return `Your all-time P/L on Nifty is <b>₹${n.toLocaleString('en-IN')}</b>.`;
+        }
+        if (q.includes("banknifty") && q.includes("profit")) {
+            let n = trades.filter(t=>t.instrument==='Banknifty').reduce((s,t)=>s+t.pnl,0);
+            return `Your all-time P/L on Banknifty is <b>₹${n.toLocaleString('en-IN')}</b>.`;
+        }
+        if (q.includes("total profit") || q.includes("overall profit")) {
+            let n = trades.reduce((s,t)=>s+t.pnl,0);
+            return `Your overall gross profit is <b>₹${n.toLocaleString('en-IN')}</b>.`;
+        }
+        
+        return "I didn't quite catch that. Try asking for 'Best trade', 'Win rate', 'Profit in last 7 days', or 'Total profit'.";
+    }
+
     // START APP
     loadData();
 </script>
 </body>
 </html>
-
-```
