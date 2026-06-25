@@ -199,7 +199,7 @@
             aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-family: var(--font-mono); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
             background: rgba(0,0,0,0.3); color: var(--text-secondary); border-radius: var(--radius-md); border: 1px solid transparent;
-            user-select: none; /* prevents text selection on double click */
+            user-select: none;
         }
         .cal-cell:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: var(--text-primary); transform: scale(1.05); z-index: 10; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         .cal-cell.weekend { opacity: 0.3; }
@@ -239,6 +239,55 @@
         .insight-bullet { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         .insight-bullet:last-child { margin-bottom: 0; }
         .insight-icon { font-size: 16px; }
+
+        /* --- DATA AGENT UI --- */
+        .agent-fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
+            background: var(--brand-gradient); box-shadow: var(--shadow-glow); display: flex;
+            align-items: center; justify-content: center; font-size: 24px; cursor: pointer;
+            z-index: 1000; transition: all 0.3s ease; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .agent-fab:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(139, 92, 246, 0.6); }
+        
+        .agent-window {
+            position: fixed; bottom: 100px; right: 30px; width: 360px; height: 500px; border-radius: var(--radius-lg);
+            background: rgba(15, 15, 17, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);
+            display: none; flex-direction: column; z-index: 1000; box-shadow: 0 24px 48px rgba(0,0,0,0.8);
+            transform-origin: bottom right; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .agent-header {
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex;
+            justify-content: space-between; align-items: center; font-weight: 600; font-size: 15px;
+            background: rgba(0,0,0,0.2); border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg);
+        }
+        .agent-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .agent-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .chip {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-pill);
+            padding: 6px 12px; font-size: 11px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+        }
+        .chip:hover { background: rgba(139, 92, 246, 0.2); color: #fff; border-color: var(--brand-solid); }
+        
+        .agent-input-area { padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; background: rgba(0,0,0,0.2); border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg);}
+        .agent-input { 
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-pill); 
+            padding: 10px 16px; color: white; font-family: var(--font-sans); font-size: 13px; outline: none; transition: 0.3s;
+        }
+        .agent-input:focus { border-color: var(--brand-solid); box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
+        .agent-send {
+            background: var(--brand-solid); border: none; width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: #fff;
+        }
+        .agent-send:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+        
+        .msg { padding: 10px 14px; border-radius: 14px; font-size: 13px; max-width: 85%; line-height: 1.5; word-wrap: break-word; }
+        .msg.user { align-self: flex-end; background: var(--brand-solid); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); }
+        .msg.agent { align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 4px; color: #e4e4e7; }
+        
+        @media (max-width: 768px) {
+            .agent-window { right: 10px; bottom: 90px; width: calc(100vw - 20px); height: 400px; }
+            .agent-fab { bottom: 20px; right: 20px; width: 50px; height: 50px; }
+        }
     </style>
 </head>
 <body>
@@ -513,6 +562,35 @@
 
 <div id="iosTooltip" class="ut-tooltip"></div>
 
+<!-- Data Agent FAB -->
+<div class="agent-fab" onclick="toggleAgent()">🤖</div>
+
+<!-- Data Agent Window -->
+<div class="agent-window" id="agentWindow">
+    <div class="agent-header">
+        <div>Terminal Assistant</div>
+        <div style="cursor:pointer; color:var(--text-secondary);" onclick="toggleAgent()">✕</div>
+    </div>
+    <div class="agent-body" id="agentBody">
+        <div class="msg agent">Hello! I am your local data agent. I read directly from your trade journal. You can ask me things like:<br><br>
+            • <i>"Profit in last 7 days"</i><br>
+            • <i>"What is my best trade?"</i><br>
+            • <i>"Profit in Nifty"</i><br>
+            • <i>"Win rate"</i>
+        </div>
+        <div class="agent-chips">
+            <div class="chip" onclick="sendQuickAgent('Profit in last 7 days')">Last 7 Days</div>
+            <div class="chip" onclick="sendQuickAgent('Win rate')">Win Rate</div>
+            <div class="chip" onclick="sendQuickAgent('Best trade')">Best Trade</div>
+            <div class="chip" onclick="sendQuickAgent('Worst trade')">Worst Trade</div>
+        </div>
+    </div>
+    <div class="agent-input-area">
+        <input type="text" id="agentInput" class="agent-input" placeholder="Ask a question..." onkeypress="if(event.key === 'Enter') sendAgentMsg()">
+        <button class="agent-send" onclick="sendAgentMsg()">↑</button>
+    </div>
+</div>
+
 <div class="modal-overlay" id="modal">
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal()">✕</button>
@@ -555,710 +633,4 @@
     Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(20,20,21,0.9)';
     Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
     Chart.defaults.plugins.tooltip.bodyColor = '#a1a1aa';
-    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
-    Chart.defaults.plugins.tooltip.borderWidth = 1;
-    Chart.defaults.plugins.tooltip.padding = 12;
-    Chart.defaults.plugins.tooltip.cornerRadius = 8;
-    Chart.defaults.plugins.tooltip.displayColors = false;
-
-    function normalizeDateStr(dateVal) {
-        if (!dateVal) return "";
-        if (typeof dateVal === 'string' && dateVal.length === 10 && dateVal.includes('-')) return dateVal;
-        const d = new Date(dateVal);
-        if (isNaN(d.getTime())) return dateVal;
-        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
-
-    function animateNumber(obj, start, end, duration, isCurrency = false, suffix = '') {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            const ease = 1 - Math.pow(1 - progress, 3); 
-            const current = start + ease * (end - start);
-            
-            if (isCurrency) obj.innerText = `${current >= 0 ? '' : '-'}₹${Math.abs(current).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-            else obj.innerText = (current % 1 !== 0 ? current.toFixed(2) : Math.floor(current)) + suffix;
-            
-            if (progress < 1) window.requestAnimationFrame(step);
-            else {
-                if (isCurrency) obj.innerText = `${end >= 0 ? '' : '-'}₹${Math.abs(end).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-                else obj.innerText = (end % 1 !== 0 ? end.toFixed(2) : Math.floor(end)) + suffix;
-            }
-        };
-        window.requestAnimationFrame(step);
-    }
-
-    async function apiGet() {
-        const res = await fetch(`${API_URL}?action=getData`, { method: 'GET', redirect: 'follow' });
-        if (!res.ok) throw new Error("Network response was not ok");
-        return await res.json();
-    }
-
-    async function apiPost(action, payload = {}) {
-        const res = await fetch(API_URL, {
-            method: 'POST', redirect: 'follow',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, ...payload })
-        });
-        if (!res.ok) throw new Error("Network response was not ok");
-        return await res.json();
-    }
-
-    async function syncWithSheet() {
-        try {
-            const data = await apiGet();
-            trades = (data.trades || []).map(t => {
-                let tradeType = 'Manual', strategy = t.category, instrument = t.subCategory && t.subCategory !== '-' ? t.subCategory : 'Unspecified';
-                if (t.category && t.category.includes(' | ')) {
-                    const parts = t.category.split(' | '); tradeType = parts[0]; strategy = parts[1];
-                } else {
-                    if (t.category === 'My Algo' || t.category === 'Other Algos' || t.category === 'Tez Algo') { tradeType = t.category === 'Tez Algo' ? 'Other Algos' : t.category; strategy = 'Default'; } 
-                    else if (t.category === 'Ironfly' || t.category === 'Commodity' || t.category === 'Equity') { tradeType = 'Manual'; strategy = t.category; }
-                }
-                return { ...t, date: normalizeDateStr(t.date), tradeType, strategy, instrument };
-            }).sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            notesData = {}; customStrategies = {};
-            if (data.notes) {
-                for (let key in data.notes) {
-                    if(key.startsWith('CHARGE_')) notesData[key] = data.notes[key];
-                    else if(key.startsWith('STRATS_')) customStrategies[key.replace('STRATS_', '')] = data.notes[key].split('|||');
-                    else notesData[normalizeDateStr(key)] = data.notes[key];
-                }
-            }
-            
-            trades.forEach(t => {
-                const mapKey = `${t.instrument}|${t.tradeType}`;
-                if (!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
-                if (!customStrategies[mapKey].includes(t.strategy)) customStrategies[mapKey].push(t.strategy);
-            });
-            updateUI();
-        } catch(e) { console.error(e); alert("Cannot connect to Google Sheets."); }
-    }
-
-    const loadData = syncWithSheet;
-
-    async function addTrade() {
-        const date = document.getElementById('dateInput').value, pnl = parseFloat(document.getElementById('pnlInput').value);
-        if(!date || isNaN(pnl)) return alert("Invalid details");
-        const packedCategory = `${selectedTradeType} | ${selectedStrategy}`;
-        const newTrade = { id: Date.now(), date: date, category: packedCategory, subCategory: selectedInstrument, pnl };
-        await apiPost('addTrade', { trade: newTrade });
-        document.getElementById('pnlInput').value = '';
-        await syncWithSheet();
-    }
-
-    async function del(id) { await apiPost('deleteTrade', { id }); closeModal(); await syncWithSheet(); }
-
-    async function saveNoteEntry(d) {
-        const val = document.getElementById('modalNote').value, updatedNotes = { ...notesData };
-        if(val.trim() === "") delete updatedNotes[d]; else updatedNotes[d] = val;
-        await apiPost('saveNotes', { notes: updatedNotes }); closeModal(); await syncWithSheet();
-    }
-
-    async function saveChargeEntry() {
-        const ym = document.getElementById('chargeMonth').value, amt = document.getElementById('chargeInputAmount').value;
-        if(!ym) return; const updatedNotes = { ...notesData };
-        if(amt === "" || isNaN(amt)) delete updatedNotes['CHARGE_' + ym]; else updatedNotes['CHARGE_' + ym] = parseFloat(amt);
-        await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet();
-    }
-
-    async function addNewStrategy() {
-        const newStrat = prompt(`Enter a new strategy name for ${selectedInstrument} (${selectedTradeType}):`);
-        if(!newStrat || newStrat.trim() === "") return;
-        const cleanStrat = newStrat.trim(), mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        if(!customStrategies[mapKey]) customStrategies[mapKey] = ['Default'];
-        if(customStrategies[mapKey].includes(cleanStrat)) return alert("Strategy already exists!");
-        customStrategies[mapKey].push(cleanStrat); selectedStrategy = cleanStrat; 
-        const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-        renderTradeLogUI(); 
-        try { await apiPost('saveNotes', { notes: updatedNotes }); } catch(e) { alert("Failed to sync new strategy to server."); }
-    }
-
-    async function deleteActiveStrategy() {
-        if(confirm(`Are you sure you want to delete the strategy "${selectedStrategy}"?\n\nPast trades keep their historical data, but this is removed from your menu.`)) {
-            const mapKey = `${selectedInstrument}|${selectedTradeType}`;
-            customStrategies[mapKey] = customStrategies[mapKey].filter(s => s !== selectedStrategy);
-            selectedStrategy = customStrategies[mapKey][0] || 'Default';
-            const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-            renderTradeLogUI();
-            try { await apiPost('saveNotes', { notes: updatedNotes }); await syncWithSheet(); } catch(e) { alert("Failed to sync deletion to server."); }
-        }
-    }
-
-    async function renameActiveStrategy() {
-        if(selectedStrategy === 'Default') return alert("Cannot rename the Default strategy.");
-        const newName = prompt(`Rename "${selectedStrategy}" to:`, selectedStrategy);
-        if(!newName || newName.trim() === "" || newName.trim() === selectedStrategy) return;
-        const cleanName = newName.trim(), mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        if(customStrategies[mapKey].includes(cleanName)) return alert("A strategy with this name already exists!");
-        if(!confirm(`Rename strategy to "${cleanName}"?\n\nNote: Past trades logged under the old name will remain unchanged. This only updates your menu.`)) return;
-
-        const idx = customStrategies[mapKey].indexOf(selectedStrategy);
-        if(idx !== -1) customStrategies[mapKey][idx] = cleanName;
-        selectedStrategy = cleanName; 
-        const updatedNotes = { ...notesData }; updatedNotes['STRATS_' + mapKey] = customStrategies[mapKey].join('|||');
-        renderTradeLogUI(); 
-        try { await apiPost('saveNotes', { notes: updatedNotes }); } catch(e) { alert("Failed to sync renamed strategy to server."); }
-    }
-
-    async function clearAll() { if(confirm("Clear all journal data? This action is irreversible.")) { await apiPost('clearAll'); await syncWithSheet(); } }
-
-    async function importData(inp) {
-        const r = new FileReader();
-        r.onload = async e => {
-            const d = JSON.parse(e.target.result);
-            let importedTrades = [], importedNotes = {};
-            if(Array.isArray(d)) importedTrades = d; else { importedTrades = d.trades || []; importedNotes = d.notes || {}; }
-            importedTrades = importedTrades.map(t => ({...t, date: normalizeDateStr(t.date)})).sort((a,b) => new Date(a.date) - new Date(b.date));
-            await apiPost('import', { trades: importedTrades, notes: importedNotes }); await syncWithSheet();
-        };
-        r.readAsText(inp.files[0]);
-    }
-
-    function exportData() {
-        const data = { trades, notes: notesData }, blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rocky_bull_backup.json'; a.click();
-    }
-
-    function toggleCharges() { 
-        isChargesOn = document.getElementById('chargesToggle').checked; 
-        localStorage.setItem('rockybull_charges_on', isChargesOn);
-        updateUI(); 
-    }
-
-    function toggleCalFilter(type, val, btn) {
-        let arr = type === 'inst' ? calFilterInst : calFilterDay;
-        if (arr.includes(val)) {
-            arr.splice(arr.indexOf(val), 1);
-            btn.classList.remove('active');
-        } else {
-            arr.push(val);
-            btn.classList.add('active');
-        }
-        renderCalendar();
-    }
-
-    function updateMonthlyInputsUI() {
-        document.getElementById('chargesToggle').checked = isChargesOn;
-        const y = curDate.getFullYear(), m = String(curDate.getMonth() + 1).padStart(2, '0'), ym = `${y}-${m}`;
-        document.getElementById('chargeMonth').value = ym;
-        document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + ym] || '';
-    }
-
-    document.getElementById('chargeMonth').addEventListener('change', (e) => { document.getElementById('chargeInputAmount').value = notesData['CHARGE_' + e.target.value] || ''; });
-
-    function updateUI() { 
-        updateMonthlyInputsUI();
-        renderTradeLogUI();
-        renderDayWiseAlgo();
-        renderTelemetry(); 
-        renderGauges(); 
-        renderCalendar(); 
-        renderCharts(); 
-        renderInsights();
-        hasAnimatedTopMetrics = true; 
-    }
-
-    function renderTradeLogUI() {
-        const instContainer = document.getElementById('instrumentChips'); instContainer.innerHTML = '';
-        INSTRUMENTS.forEach(inst => {
-            const btn = document.createElement('button'); btn.className = `pill ${inst === selectedInstrument ? 'active' : ''}`; btn.innerText = inst;
-            btn.onclick = () => { selectedInstrument = inst; if (inst === 'Equity' || inst === 'Commodity') selectedTradeType = 'Manual'; renderTradeLogUI(); };
-            instContainer.appendChild(btn);
-        });
-
-        const execTypeGroup = document.getElementById('executionTypeGroup');
-        if (selectedInstrument === 'Equity' || selectedInstrument === 'Commodity') { execTypeGroup.style.display = 'none'; selectedTradeType = 'Manual'; } else { execTypeGroup.style.display = 'block'; }
-
-        const typeContainer = document.getElementById('tradeTypeChips'); typeContainer.innerHTML = '';
-        TRADETYPES.forEach(type => {
-            const btn = document.createElement('button'); btn.className = `pill ${type === selectedTradeType ? 'active' : ''}`; btn.innerText = type;
-            btn.onclick = () => { selectedTradeType = type; renderTradeLogUI(); }; typeContainer.appendChild(btn);
-        });
-
-        const stratContainer = document.getElementById('strategyChips'); stratContainer.innerHTML = '';
-        const mapKey = `${selectedInstrument}|${selectedTradeType}`;
-        let strats = customStrategies[mapKey] || ['Default'];
-        if (!strats.includes(selectedStrategy)) selectedStrategy = strats[0] || 'Default';
-
-        strats.forEach(s => {
-            const btn = document.createElement('button'); btn.className = `pill ${s === selectedStrategy ? 'active' : ''}`; btn.innerText = s;
-            btn.onclick = () => { selectedStrategy = s; renderTradeLogUI(); }; stratContainer.appendChild(btn);
-        });
-
-        const addBtn = document.createElement('button'); addBtn.className = 'pill add-new'; addBtn.innerText = '+ Add New'; addBtn.onclick = addNewStrategy; stratContainer.appendChild(addBtn);
-
-        const delBtn = document.getElementById('delStratBtn');
-        const renBtn = document.getElementById('renStratBtn');
-        if (selectedStrategy === 'Default' || strats.length <= 1) { 
-            delBtn.style.display = 'none'; renBtn.style.display = 'none';
-        } else { 
-            delBtn.style.display = 'block'; renBtn.style.display = 'block'; 
-            delBtn.onclick = deleteActiveStrategy; renBtn.onclick = renameActiveStrategy; 
-        }
-    }
-
-    function renderDayWiseAlgo() {
-        let dayTotals = [0, 0, 0, 0, 0]; 
-        trades.forEach(t => {
-            if ((t.tradeType === 'My Algo' || t.tradeType === 'Other Algos') && ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument)) {
-                const parts = t.date.split('-');
-                if (parts.length === 3) {
-                    const d = new Date(parts[0], parts[1] - 1, parts[2]), dayOfWeek = d.getDay(); 
-                    if (dayOfWeek >= 1 && dayOfWeek <= 5) dayTotals[dayOfWeek - 1] += t.pnl;
-                }
-            }
-        });
-        
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-        days.forEach((d, i) => {
-            const el = document.getElementById(`algo${d}`), val = dayTotals[i];
-            el.innerText = `₹${val.toLocaleString()}`;
-            if(val >= 0) { el.style.color = "var(--profit)"; } else { el.style.color = "var(--loss)"; }
-        });
-    }
-
-    function renderTelemetry() {
-        const pnlEl = document.getElementById('statTotalPnl'), fnoEl = document.getElementById('statFnoPnl'), eqEl = document.getElementById('statEqPnl');
-
-        if(trades.length === 0) {
-            pnlEl.innerText = "₹0"; pnlEl.className = "metric-value"; fnoEl.innerText = "₹0"; fnoEl.className = ""; eqEl.innerText = "₹0"; eqEl.className = "";
-            updateTelemetryGrid([], ''); updateTelemetryGrid([], 'Eq');
-            return;
-        }
-        
-        const grossPnl = trades.reduce((a,b) => a + b.pnl, 0);
-        let totalCharges = 0;
-        
-        if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) totalCharges += parseFloat(notesData[k]) || 0; }
-        
-        const displayPnl = grossPnl - totalCharges;
-        pnlEl.className = `metric-value ${displayPnl >= 0 ? 'text-profit' : 'text-loss'}`;
-        document.getElementById('pnlLabel').innerText = (isChargesOn) ? "Net Profit / Loss" : "Gross Profit / Loss";
-
-        if (displayPnl > 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12) 0%, var(--bg-base) 70%)'; }
-        else if (displayPnl < 0) { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, var(--bg-base) 70%)'; }
-        else { document.body.style.backgroundImage = 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, var(--bg-base) 70%)'; }
-        
-        const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
-        const eqTrades = trades.filter(t => t.instrument === 'Equity');
-
-        const fnoPnl = fnoTrades.reduce((sum, t) => sum + t.pnl, 0);
-        const eqPnl = eqTrades.reduce((sum, t) => sum + t.pnl, 0);
-
-        fnoEl.className = fnoPnl >= 0 ? 'text-profit' : 'text-loss';
-        eqEl.className = eqPnl >= 0 ? 'text-profit' : 'text-loss';
-
-        if (!hasAnimatedTopMetrics) {
-            animateNumber(pnlEl, 0, displayPnl, 1200, true); animateNumber(fnoEl, 0, fnoPnl, 1000, true); animateNumber(eqEl, 0, eqPnl, 1000, true);
-        } else {
-            pnlEl.innerText = `${displayPnl >= 0 ? '' : '-'}₹${Math.abs(displayPnl).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-            fnoEl.innerText = `${fnoPnl >= 0 ? '' : '-'}₹${Math.abs(fnoPnl).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-            eqEl.innerText = `${eqPnl >= 0 ? '' : '-'}₹${Math.abs(eqPnl).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-        }
-
-        updateTelemetryGrid(fnoTrades, '');
-        updateTelemetryGrid(eqTrades, 'Eq');
-    }
-
-    function updateTelemetryGrid(tradeList, suffix) {
-        if(tradeList.length === 0) {
-            document.getElementById('statAvgTrade' + suffix).innerText = "₹0"; document.getElementById('statAvgWin' + suffix).innerText = "₹0";
-            document.getElementById('statAvgLoss' + suffix).innerText = "₹0"; document.getElementById('statMaxWin' + suffix).innerText = "₹0";
-            document.getElementById('statMaxLoss' + suffix).innerText = "₹0"; document.getElementById('statMaxDD' + suffix).innerText = "₹0";
-            document.getElementById('statDDDuration' + suffix).innerText = "0d"; document.getElementById('statTradeCount' + suffix).innerText = "0";
-            document.getElementById('statRR' + suffix).innerText = "1:0.0"; document.getElementById('statWinStreak' + suffix).innerText = "0";
-            document.getElementById('statLossStreak' + suffix).innerText = "0"; document.getElementById('statCurStreak' + suffix).innerText = "0";
-            return;
-        }
-
-        const grossPnl = tradeList.reduce((a,b) => a + b.pnl, 0), avgTrade = grossPnl / tradeList.length;
-        const wins = tradeList.filter(t => t.pnl > 0), losses = tradeList.filter(t => t.pnl <= 0);
-        const avgWin = wins.length ? wins.reduce((a,b)=>a+b.pnl,0)/wins.length : 0;
-        const avgLoss = losses.length ? losses.reduce((a,b)=>a+b.pnl,0)/losses.length : 0;
-        const maxWin = wins.length ? Math.max(...wins.map(t=>t.pnl)) : 0;
-        const maxLoss = losses.length ? Math.min(...losses.map(t=>t.pnl)) : 0;
-        const rr = avgLoss !== 0 ? Math.abs(avgWin / avgLoss).toFixed(2) : (avgWin > 0 ? "∞" : "0.0");
-
-        let currentStreakVal = 0, currentStreakType = null;
-        let maxWinStreak = 0, maxLossStreak = 0, tempWinStreak = 0, tempLossStreak = 0;
-        const sortedTrades = [...tradeList].sort((a,b) => new Date(a.date) - new Date(b.date));
-
-        sortedTrades.forEach(t => {
-            if (t.pnl > 0) {
-                tempWinStreak++; tempLossStreak = 0;
-                if (tempWinStreak > maxWinStreak) maxWinStreak = tempWinStreak;
-                if (currentStreakType === 'win') currentStreakVal++; else { currentStreakType = 'win'; currentStreakVal = 1; }
-            } else if (t.pnl < 0) {
-                tempLossStreak++; tempWinStreak = 0;
-                if (tempLossStreak > maxLossStreak) maxLossStreak = tempLossStreak;
-                if (currentStreakType === 'loss') currentStreakVal++; else { currentStreakType = 'loss'; currentStreakVal = 1; }
-            } else { tempWinStreak = 0; tempLossStreak = 0; currentStreakVal = 0; currentStreakType = null; }
-        });
-
-        const streakText = currentStreakType === 'win' ? `+${currentStreakVal} W` : (currentStreakType === 'loss' ? `-${currentStreakVal} L` : '0');
-        const streakClass = currentStreakType === 'win' ? 'val text-profit' : (currentStreakType === 'loss' ? 'val text-loss' : 'val');
-
-        const dailyTradePnL = {};
-        tradeList.forEach(t => { dailyTradePnL[t.date] = (dailyTradePnL[t.date] || 0) + t.pnl; });
-
-        let cumulative = 0, peak = -Infinity, maxDD = 0, ddPeakDate = null, maxDD_StartDate = null, maxDD_EndDate = null;
-        Object.keys(dailyTradePnL).sort().forEach(dateStr => {
-            cumulative += dailyTradePnL[dateStr]; const tDate = new Date(dateStr);
-            if(cumulative > peak) { peak = cumulative; ddPeakDate = tDate; } 
-            const dd = cumulative - peak;
-            if(dd < maxDD) { maxDD = dd; maxDD_StartDate = ddPeakDate; maxDD_EndDate = tDate; }
-        });
-
-        let durationDays = 0;
-        if(maxDD_StartDate && maxDD_EndDate) durationDays = Math.ceil(Math.abs(maxDD_EndDate - maxDD_StartDate) / (1000 * 60 * 60 * 24));
-
-        document.getElementById('statAvgTrade' + suffix).innerText = `₹${avgTrade.toFixed(0)}`;
-        document.getElementById('statAvgWin' + suffix).innerText = `₹${avgWin.toFixed(0)}`;
-        document.getElementById('statAvgLoss' + suffix).innerText = `₹${avgLoss.toFixed(0)}`;
-        document.getElementById('statMaxWin' + suffix).innerText = `₹${maxWin.toLocaleString()}`;
-        document.getElementById('statMaxLoss' + suffix).innerText = `₹${maxLoss.toLocaleString()}`;
-        document.getElementById('statMaxDD' + suffix).innerText = `₹${maxDD.toLocaleString()}`;
-        document.getElementById('statDDDuration' + suffix).innerText = `${durationDays}d`;
-        document.getElementById('statTradeCount' + suffix).innerText = tradeList.length;
-        document.getElementById('statRR' + suffix).innerText = `1:${rr}`;
-        document.getElementById('statWinStreak' + suffix).innerText = maxWinStreak;
-        document.getElementById('statLossStreak' + suffix).innerText = maxLossStreak;
-        document.getElementById('statCurStreak' + suffix).innerText = streakText;
-        document.getElementById('statCurStreak' + suffix).className = streakClass;
-    }
-
-    function renderGauges() {
-        const commonOptions = { cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { animateRotate: true, animateScale: true, duration: 1500 }, borderWidth: 0 };
-        const colorBg = '#1f1f22';
-
-        const ctxWin = document.getElementById('winGauge').getContext('2d');
-        if(gaugeWin) gaugeWin.destroy();
-        let winRate = 0;
-        if(trades.length > 0) winRate = Math.round((trades.filter(t => t.pnl > 0).length / trades.length) * 100);
-        
-        const winEl = document.getElementById('winRateVal');
-        if (!hasAnimatedTopMetrics) animateNumber(winEl, 0, winRate, 1200, false, '%'); else winEl.innerText = `${winRate}%`;
-        
-        gaugeWin = new Chart(ctxWin, { type: 'doughnut', data: { datasets: [{ data: [winRate, 100 - winRate], backgroundColor: ['#10b981', colorBg], borderRadius: 2 }] }, options: commonOptions });
-
-        const ctxPf = document.getElementById('pfGauge').getContext('2d');
-        if(gaugePf) gaugePf.destroy();
-        const grossWin = trades.filter(t=>t.pnl>0).reduce((a,b)=>a+b.pnl,0), grossLoss = Math.abs(trades.filter(t=>t.pnl<0).reduce((a,b)=>a+b.pnl,0));
-        let pf = grossLoss === 0 ? (grossWin > 0 ? 5 : 0) : (grossWin / grossLoss);
-        pf = Math.min(pf, 5); 
-        
-        const pfEl = document.getElementById('pfVal');
-        if (grossLoss === 0 && grossWin > 0) pfEl.innerText = "∞"; else { if (!hasAnimatedTopMetrics) animateNumber(pfEl, 0, pf, 1200, false); else pfEl.innerText = pf.toFixed(2); }
-        
-        gaugePf = new Chart(ctxPf, { type: 'doughnut', data: { datasets: [{ data: [pf, 5 - pf], backgroundColor: ['#8b5cf6', colorBg], borderRadius: 2 }] }, options: commonOptions });
-    }
-
-    function renderInsights() {
-        const box = document.getElementById('insightsBox');
-        if (!trades || trades.length === 0) {
-            box.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Need more data to generate insights...</div>'; return;
-        }
-
-        let insights = [];
-
-        let dayMap = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        trades.forEach(t => { const d = new Date(t.date).getDay(); dayMap[d] += t.pnl; });
-        let bestDay = -1, maxDayPnl = -Infinity;
-        for (let i=1; i<=5; i++) { if (dayMap[i] > maxDayPnl) { maxDayPnl = dayMap[i]; bestDay = i; } }
-        if (maxDayPnl > 0) insights.push(`<div class="insight-bullet"><span class="insight-icon">📅</span><span><strong>${dayNames[bestDay]}s</strong> are your most profitable days (₹${maxDayPnl.toLocaleString()}).</span></div>`);
-
-        let instMap = {};
-        trades.forEach(t => { instMap[t.instrument] = (instMap[t.instrument]||0) + t.pnl; });
-        let bestInst = '', maxInstPnl = -Infinity, worstInst = '', minInstPnl = Infinity;
-        for (let inst in instMap) {
-            if (instMap[inst] > maxInstPnl) { maxInstPnl = instMap[inst]; bestInst = inst; }
-            if (instMap[inst] < minInstPnl) { minInstPnl = instMap[inst]; worstInst = inst; }
-        }
-        if (maxInstPnl > 0 && bestInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">🔥</span><span><strong>${bestInst}</strong> is your top performing instrument (₹${maxInstPnl.toLocaleString()}). Keep exploiting this edge.</span></div>`);
-        if (minInstPnl < 0 && worstInst) insights.push(`<div class="insight-bullet"><span class="insight-icon">⚠️</span><span><strong>${worstInst}</strong> is bleeding capital (₹${Math.abs(minInstPnl).toLocaleString()} loss). Consider reviewing your strategy or sizing down.</span></div>`);
-
-        const sortedTrades = [...trades].sort((a,b) => new Date(a.date) - new Date(b.date));
-        let curVal = 0, curType = null;
-        sortedTrades.forEach(t => {
-            if (t.pnl > 0) { if (curType === 'win') curVal++; else { curType = 'win'; curVal = 1; } } 
-            else if (t.pnl < 0) { if (curType === 'loss') curVal++; else { curType = 'loss'; curVal = 1; } } 
-            else { curType = null; curVal = 0; }
-        });
-        
-        if (curType === 'win' && curVal >= 3) insights.push(`<div class="insight-bullet"><span class="insight-icon">🚀</span><span>You are on a <strong>${curVal}-trade winning streak</strong>! Stay disciplined and don't get overconfident.</span></div>`);
-        else if (curType === 'loss' && curVal >= 3) insights.push(`<div class="insight-bullet"><span class="insight-icon">🛡️</span><span>You're in a <strong>${curVal}-trade drawdown</strong>. Protect capital and stick strictly to your rules.</span></div>`);
-
-        if (insights.length === 0) box.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Logging more trades will unlock deep statistical insights.</div>';
-        else box.innerHTML = insights.join('');
-    }
-
-    function renderCharts() {
-        
-        const fnoTrades = trades.filter(t => ['Nifty', 'Banknifty', 'Sensex'].includes(t.instrument));
-        const fnoDateMap = {}; 
-        fnoTrades.forEach(t => fnoDateMap[t.date] = (fnoDateMap[t.date] || 0) + t.pnl);
-        const fnoDates = Object.keys(fnoDateMap).sort();
-        let fnoEq = [], fnoCum = 0;
-        fnoDates.forEach(d => { fnoCum += fnoDateMap[d]; fnoEq.push(fnoCum); });
-        
-        const ctxFno = document.getElementById('fnoChart').getContext('2d');
-        if(chartFno) chartFno.destroy();
-        chartFno = new Chart(ctxFno, { 
-            type: 'line', 
-            data: { 
-                labels: fnoDates, 
-                datasets: [{ 
-                    label: 'F&O Equity', data: fnoEq, borderWidth: 2, 
-                    fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.1)', below: 'rgba(244, 63, 94, 0.1)' },
-                    segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
-                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
-                }] 
-            }, 
-            options: { 
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} } },
-                interaction: { mode: 'index', intersect: false }
-            } 
-        });
-
-        const eqTradesList = trades.filter(t => t.instrument === 'Equity');
-        const eqDateMap = {}; 
-        eqTradesList.forEach(t => eqDateMap[t.date] = (eqDateMap[t.date] || 0) + t.pnl);
-        const eqDates = Object.keys(eqDateMap).sort();
-        let eqLine = [], eqCum = 0;
-        eqDates.forEach(d => { eqCum += eqDateMap[d]; eqLine.push(eqCum); });
-        
-        const ctxEq = document.getElementById('eqChart').getContext('2d');
-        if(chartEq) chartEq.destroy();
-        chartEq = new Chart(ctxEq, { 
-            type: 'line', 
-            data: { 
-                labels: eqDates, 
-                datasets: [{ 
-                    label: 'Cash Equity', data: eqLine, borderWidth: 2, 
-                    fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.1)', below: 'rgba(244, 63, 94, 0.1)' },
-                    segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
-                    pointBackgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', pointBorderColor: '#fff', pointBorderWidth: 1, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 20, tension: 0.4
-                }] 
-            }, 
-            options: { 
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} } },
-                interaction: { mode: 'index', intersect: false }
-            } 
-        });
-
-        const y = curDate.getFullYear(), m = curDate.getMonth(), daysInMonth = new Date(y, m + 1, 0).getDate(), monthPrefix = `${y}-${String(m+1).padStart(2,'0')}`;
-        const monthLabels = [], monthData = [];
-        for(let i = 1; i <= daysInMonth; i++) {
-            const dateStr = `${monthPrefix}-${String(i).padStart(2,'0')}`; monthLabels.push(String(i)); 
-            monthData.push(trades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl, 0));
-        }
-
-        const ctx2 = document.getElementById('dailyPnlChart').getContext('2d');
-        if(chart2) chart2.destroy();
-        chart2 = new Chart(ctx2, {
-            type: 'bar',
-            data: { labels: monthLabels, datasets: [{ label: 'Daily P/L', data: monthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 4 }] },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { family: "'JetBrains Mono', monospace", size: 10 } } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} }
-                }, interaction: { mode: 'index', intersect: false }
-            }
-        });
-
-        const monthlyAggMap = {};
-        trades.forEach(t => { const ym = t.date.substring(0, 7); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) + t.pnl; });
-        if(isChargesOn) { for(let k in notesData) if(k.startsWith('CHARGE_')) { const ym = k.replace('CHARGE_', ''); monthlyAggMap[ym] = (monthlyAggMap[ym] || 0) - (parseFloat(notesData[k]) || 0); } }
-
-        const sortedAggMonths = Object.keys(monthlyAggMap).sort();
-        const aggMonthLabels = sortedAggMonths.map(ym => new Date(ym + '-01').toLocaleString('default', { month: 'short', year: '2-digit' }));
-        const aggMonthData = sortedAggMonths.map(ym => monthlyAggMap[ym]);
-
-        const ctx3 = document.getElementById('monthlyPnlChart').getContext('2d');
-        if(chart3) chart3.destroy();
-        chart3 = new Chart(ctx3, {
-            type: 'bar',
-            data: { labels: aggMonthLabels, datasets: [{ label: 'Monthly Net P/L', data: aggMonthData, backgroundColor: ctx => ctx.raw >= 0 ? '#10b981' : '#f43f5e', borderRadius: 6 }] },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { family: "'JetBrains Mono', monospace", size: 11, weight: '600' } } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)', tickLength: 0 }, border: { display: false }, ticks: {font: {family: "'JetBrains Mono', monospace"}} }
-                }, interaction: { mode: 'index', intersect: false }
-            }
-        });
-    }
-
-    function moveMonth(n) { curDate.setMonth(curDate.getMonth() + n); renderCalendar(); }
-    
-    function renderCalendar() {
-        const y = curDate.getFullYear(), m = curDate.getMonth();
-        document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
-        
-        const calFilteredTrades = trades.filter(t => {
-            let instMatch = calFilterInst.length === 0 || calFilterInst.includes(t.instrument);
-            let dayMatch = false;
-            if (calFilterDay.length === 0) {
-                dayMatch = true;
-            } else {
-                const parts = t.date.split('-');
-                if (parts.length === 3) {
-                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    if (calFilterDay.includes(d.getDay().toString())) dayMatch = true;
-                }
-            }
-            return instMatch && dayMatch;
-        });
-
-        const grid = document.getElementById('calGrid'); grid.innerHTML = ''; 
-        ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
-        
-        const fDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
-        
-        let maxWin = 0, maxLoss = 0;
-        let currentMonthSum = 0; 
-        
-        for(let i = 1; i <= days; i++) {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const pnl = calFilteredTrades.filter(t => t.date === dateStr).reduce((a,b)=>a+b.pnl,0);
-            if(pnl > 0) maxWin = Math.max(maxWin, pnl); 
-            if(pnl < 0) maxLoss = Math.max(maxLoss, Math.abs(pnl));
-            currentMonthSum += pnl; 
-        }
-
-        const sumEl = document.getElementById('calMonthSum');
-        sumEl.innerText = `${currentMonthSum >= 0 ? '' : '-'}₹${Math.abs(currentMonthSum).toLocaleString('en-IN', {maximumFractionDigits:0})}`;
-        if(currentMonthSum > 0) {
-            sumEl.style.color = "var(--profit)";
-            sumEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
-            sumEl.style.background = "rgba(16, 185, 129, 0.1)";
-        } else if(currentMonthSum < 0) {
-            sumEl.style.color = "var(--loss)";
-            sumEl.style.borderColor = "rgba(244, 63, 94, 0.3)";
-            sumEl.style.background = "rgba(244, 63, 94, 0.1)";
-        } else {
-            sumEl.style.color = "var(--text-secondary)";
-            sumEl.style.borderColor = "var(--border-subtle)";
-            sumEl.style.background = "rgba(255,255,255,0.05)";
-        }
-
-        for(let i = 0; i < fDay; i++) grid.innerHTML += '<div></div>';
-        
-        for(let i = 1; i <= days; i++) {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const dateObj = new Date(y, m, i), isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-            
-            const dayTrades = calFilteredTrades.filter(t => t.date === dateStr);
-            const pnl = dayTrades.reduce((a,b)=>a+b.pnl,0);
-            
-            const el = document.createElement('div'); el.className = 'cal-cell';
-            
-            el.onclick = () => { document.getElementById('dateInput').value = dateStr; };
-            el.ondblclick = () => { openModal(dateStr, dayTrades); };
-
-            if(notesData[dateStr]) { el.classList.add('has-note'); el.innerHTML += `<div class="indicator-dot"></div>`; }
-            
-            if(dayTrades.length > 0) {
-                el.innerHTML = i + (notesData[dateStr] ? `<div class="indicator-dot"></div>` : ''); el.classList.add('has-data');
-                if(pnl > 0) { let alpha = 0.1 + ((pnl / maxWin) * 0.4); el.classList.add('profit'); el.style.backgroundColor = `rgba(16, 185, 129, ${alpha})`; }
-                else if(pnl < 0) { let alpha = 0.1 + ((Math.abs(pnl) / maxLoss) * 0.4); el.classList.add('loss'); el.style.backgroundColor = `rgba(244, 63, 94, ${alpha})`; }
-                el.addEventListener('mouseenter', (e) => showTooltip(e, dateStr, pnl)); el.addEventListener('mouseleave', hideTooltip);
-            } else { 
-                el.innerHTML = i + (notesData[dateStr] ? `<div class="indicator-dot"></div>` : ''); 
-                if(isWeekend) el.classList.add('weekend'); 
-            }
-            grid.appendChild(el);
-        }
-    }
-
-    function showTooltip(e, d, p) { 
-        const r = e.target.getBoundingClientRect(); tooltip.innerHTML = `<div class="tt-date">${d}</div><div class="tt-val ${p >= 0 ? 'text-profit' : 'text-loss'}">${p >= 0 ? '+' : ''}₹${p.toLocaleString()}</div>`; 
-        tooltip.style.display = 'flex'; const tr = tooltip.getBoundingClientRect(); tooltip.style.top = `${r.top - tr.height - 12}px`; tooltip.style.left = `${r.left + (r.width / 2) - (tr.width / 2)}px`; tooltip.classList.add('show'); 
-    }
-    function hideTooltip() { tooltip.classList.remove('show'); }
-
-    function runReport() {
-        const s = document.getElementById('repStart').value, e = document.getElementById('repEnd').value; 
-        if(!s || !e) return;
-        const sub = trades.filter(t => t.date >= s && t.date <= e); 
-        let tot = sub.reduce((a,b)=>a+b.pnl,0);
-        let bd = {}, instBd = {};  
-        sub.forEach(t => {
-            let stratName = t.tradeType === 'Manual' ? (t.strategy === 'Default' ? `${t.instrument} (Base)` : `${t.instrument} (${t.strategy})`) : `${t.instrument} (${t.tradeType} - ${t.strategy})`;
-            bd[stratName] = (bd[stratName]||0) + t.pnl; instBd[t.instrument] = (instBd[t.instrument]||0) + t.pnl;
-        });
-
-        // Add Charges back into the report
-        const startM = s.substring(0, 7);
-        const endM = e.substring(0, 7);
-
-        if(isChargesOn) {
-            let reportCharges = 0;
-            for(let k in notesData) {
-                if(k.startsWith('CHARGE_')) {
-                    const m = k.replace('CHARGE_', '');
-                    if(m >= startM && m <= endM) reportCharges += parseFloat(notesData[k]) || 0;
-                }
-            }
-            if(reportCharges > 0) {
-                tot -= reportCharges;
-                bd['Other Charges & Fees'] = -reportCharges;
-                instBd['Other Charges & Fees'] = -reportCharges;
-            }
-        }
-
-        const totEl = document.getElementById('repTotal');
-        totEl.innerText = `₹${tot.toLocaleString()}`; totEl.className = tot >= 0 ? 'text-profit' : 'text-loss';
-        
-        let h = ''; 
-        for(let k in bd) h += `<div class="report-list-item"><span>${k}</span><span class="${bd[k] >= 0 ? 'text-profit' : 'text-loss'}">${bd[k] >= 0 ? '' : '-'}₹${Math.abs(bd[k]).toLocaleString()}</span></div>`;
-        if(Object.keys(bd).length === 0) h = '<div style="color:var(--text-muted); font-size:13px;">No trades or charges in this period.</div>';
-        document.getElementById('repBreakdown').innerHTML = h; 
-
-        let hInst = '';
-        for(let k in instBd) hInst += `<div class="report-list-item"><span>${k}</span><span class="${instBd[k] >= 0 ? 'text-profit' : 'text-loss'}">${instBd[k] >= 0 ? '' : '-'}₹${Math.abs(instBd[k]).toLocaleString()}</span></div>`;
-        document.getElementById('repInstBreakdown').innerHTML = hInst; document.getElementById('reportBox').style.display = 'block';
-    }
-
-    function openModal(d, i) { 
-        document.getElementById('modalTitle').innerText = new Date(d).toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); 
-        let h = '';
-        if(i.length > 0) {
-            h += '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 24px;">'; 
-            i.forEach(t => {
-                let titleText = `${t.instrument} — ${t.tradeType} (${t.strategy})`;
-                h += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-                    <div style="font-weight:600; font-size:14px;">${titleText}</div>
-                    <div style="display:flex; align-items:center; gap:20px;">
-                        <span class="${t.pnl >= 0 ? 'text-profit' : 'text-loss'}" style="font-weight:700; font-size:15px; font-family:var(--font-mono);">₹${t.pnl.toLocaleString()}</span>
-                        <button onclick="del(${t.id})" style="background:var(--bg-hover); border:none; color:var(--text-secondary); cursor:pointer; font-size:12px; padding:6px 10px; border-radius:6px; transition:0.2s;">Del</button>
-                    </div></div>`;
-            }); 
-            h += '</div>'; 
-        } else { h += '<div style="text-align:center; color:var(--text-muted); font-size:14px; margin-bottom:24px; padding:30px 20px; background:rgba(0,0,0,0.3); border-radius:var(--radius-md);">No executions found for this filter/date.</div>'; }
-        document.getElementById('modalContent').innerHTML = h; 
-
-        const noteVal = notesData[d] || '';
-        document.getElementById('noteSection').innerHTML = `
-            <div>
-                <span class="form-label" style="font-size:14px; color:var(--text-primary);">Session Notes & Observations</span>
-                <textarea id="modalNote" class="textarea-custom" placeholder="Document your psychology, mistakes, or market conditions...">${noteVal}</textarea>
-                <button class="btn-gradient" onclick="saveNoteEntry('${d}')" style="margin-top:16px;">Save Notes</button>
-            </div>`;
-        document.getElementById('modal').style.display = 'flex'; 
-    }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-    // START APP
-    loadData();
-</script>
-</body>
-</html>
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
